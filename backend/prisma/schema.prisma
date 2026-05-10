@@ -4,10 +4,279 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum UserCategory {
+  PELAJAR_SMA_SMK
+  MAHASISWA
+  FRESH_GRADUATE
+  PROFESIONAL
+  UMUM            
+}
+
+enum AssessmentStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum RecommendationStatus {
+  ACTIVE    
+  ARCHIVED  
+}
+
+enum RoadmapStatus {
+  ACTIVE
+  COMPLETED
+  REPLACED  
+}
+
+enum EvaluationStatus {
+  PENDING   
+  COMPLETED 
+}
+
+enum AdjustmentType {
+  SCHEDULE_SPEED    
+  REORDER_MATERIAL 
+  ADD_MATERIAL    
+  CHANGE_CAREER     
+}
+
+enum AdjustmentDecision {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// USER & PROFILE
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  passwordHash   String
+  name           String
+  category       UserCategory?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  profile               UserProfile?
+  cvUploads             CvUpload[]
+  assessmentSessions    AssessmentSession[]
+  recommendationSessions RecommendationSession[]
+  activeRoadmap         Roadmap?               @relation("ActiveRoadmap")
+  roadmaps              Roadmap[]
+  evaluations           PeriodicEvaluation[]
+  adjustmentProposals   AdjustmentProposal[]
+
+  @@map("users")
+}
+
+// Data profil hasil ekstraksi CV + kuesioner 
+model UserProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Dari CV
+  educationHistory  Json?    
+  workExperiences   Json?    
+  extractedSkills   String[] 
+
+  // Background IT (dikombinasikan dengan UserCategory untuk konteks Gemini)
+  itBackground      Boolean? 
+  itBackgroundNote  String?  
+
+  itInterests       String[] 
+  learningStyle     String?  
+  workEnvPreference String?  
+  weeklyHours       Int?    
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_profiles")
+}
+
+// CV UPLOAD & EXTRACTION
+
+model CvUpload {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fileName     String
+  fileUrl      String   
+  extractedRaw Json?    
+  isReviewed   Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+
+  @@map("cv_uploads")
+}
+
+// HYBRID ASSESSMENT
+
+model AssessmentSession {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    AssessmentStatus @default(IN_PROGRESS)
+
+  answers   AssessmentAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("assessment_sessions")
+}
+
+model AssessmentAnswer {
+  id          String            @id @default(cuid())
+  sessionId   String
+  session     AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  questionKey String  
+  questionText String
+  answerValue  String
+
+  createdAt   DateTime @default(now())
+
+  @@map("assessment_answers")
+}
+
+// CAREER RECOMMENDATION
+
+model RecommendationSession {
+  id        String               @id @default(cuid())
+  userId    String
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    RecommendationStatus @default(ACTIVE)
+
+  recommendations CareerRecommendation[]
+
+  createdAt DateTime @default(now())
+
+  @@map("recommendation_sessions")
+}
+
+model CareerRecommendation {
+  id          String                @id @default(cuid())
+  sessionId   String
+  session     RecommendationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  rank              Int    
+  professionTitle   String
+  readinessPercent  Int     
+  ownedSkills       String[]
+  missingSkills     String[]
+  reasonSummary     String
+  professionOverview Json   
+
+  isSelected        Boolean  @default(false) 
+
+  roadmaps          Roadmap[]
+
+  @@map("career_recommendations")
+}
+
+// ROADMAP & MATERI
+
+model Roadmap {
+  id                     String               @id @default(cuid())
+  userId                 String
+  user                   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendationId       String
+  recommendation         CareerRecommendation @relation(fields: [recommendationId], references: [id])
+  status                 RoadmapStatus        @default(ACTIVE)
+
+  activeForUserId        String?              @unique
+  activeForUser          User?                @relation("ActiveRoadmap", fields: [activeForUserId], references: [id])
+
+  weeklyHoursAtCreation  Int 
+
+  materials              RoadmapMaterial[]
+  evaluations            PeriodicEvaluation[]
+  adjustmentProposals    AdjustmentProposal[]
+
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@map("roadmaps")
+}
+
+model RoadmapMaterial {
+  id          String  @id @default(cuid())
+  roadmapId   String
+  roadmap     Roadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+
+  order       Int    
+  phase       String  
+  title       String
+  description String?
+  scheduledAt DateTime? 
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("roadmap_materials")
+}
+
+// PERIODIC EVALUATION
+
+model PeriodicEvaluation {
+  id         String           @id @default(cuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmapId  String
+  roadmap    Roadmap          @relation(fields: [roadmapId], references: [id])
+  status     EvaluationStatus @default(PENDING)
+
+  completedMaterials   Int
+  totalMaterials       Int
+  readinessPercentAtEval Int
+
+  paceComfort          String? 
+  interestShifted      Boolean?
+  timeAvailabilityNote String?
+  freeNotes            String?
+
+  proposedAdjustments  AdjustmentProposal[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("periodic_evaluations")
+}
+
+// ADJUSTMENT PROPOSAL
+
+
+model AdjustmentProposal {
+  id           String             @id @default(cuid())
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmapId    String
+  roadmap      Roadmap            @relation(fields: [roadmapId], references: [id])
+
+  evaluationId String?
+  evaluation   PeriodicEvaluation? @relation(fields: [evaluationId], references: [id])
+  triggeredByAdvisor Boolean       @default(false)
+
+  type         AdjustmentType
+  decision     AdjustmentDecision @default(PENDING)
+  description  String             
+  payload      Json               
+
+  decidedAt    DateTime?
+  createdAt    DateTime           @default(now())
+
+  @@map("adjustment_proposals")
 }
