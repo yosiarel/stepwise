@@ -73,8 +73,24 @@ model User {
   roadmaps              Roadmap[]
   evaluations           PeriodicEvaluation[]
   adjustmentProposals   AdjustmentProposal[]
+  refreshTokens         RefreshToken[]
 
   @@map("users")
+}
+
+// REFRESH TOKEN
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token     String   @unique  // hashed refresh token
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
 }
 
 // Data profil hasil ekstraksi CV + kuesioner 

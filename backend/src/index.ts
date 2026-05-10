@@ -1,20 +1,23 @@
+import 'dotenv/config';
 import express from 'express';
 import type { Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import { prisma } from './lib/prisma.js';
-import { setupSwagger } from './swagger.js'; // 1. Import Swagger
-
-dotenv.config();
+import { setupSwagger } from './swagger.js';
+import authRouter from './routes/authRouter.js';
+import { errorHandler } from './middlewares/errorMiddleware.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
-// 2. Inisialisasi Swagger
 setupSwagger(app);
+
+app.use('/api/auth', authRouter);
 
 /**
  * @openapi
@@ -45,6 +48,8 @@ app.get('/api/health', async (req: Request, res: Response) => {
     });
   }
 });
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
