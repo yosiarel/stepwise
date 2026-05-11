@@ -127,7 +127,8 @@ model CvUpload {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   fileName     String
-  fileUrl      String   
+  fileUrl      String
+  publicId     String?  
   extractedRaw Json?    
   isReviewed   Boolean  @default(false)
 
