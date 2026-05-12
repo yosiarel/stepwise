@@ -112,6 +112,7 @@ model UserProfile {
   learningStyle     String?  
   workEnvPreference String?  
   weeklyHours       Int?    
+  preferredStudyTime String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -153,19 +154,54 @@ model AssessmentSession {
   @@map("assessment_sessions")
 }
 
+model AssessmentQuestion {
+  id           String   @id @default(cuid())
+  key          String   @unique  
+  text         String            
+  helpText     String?           
+  inputType    String            
+  order        Int               
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  options      AssessmentOption[]
+  answers      AssessmentAnswer[]
+
+  @@map("assessment_questions")
+}
+
 model AssessmentAnswer {
   id          String            @id @default(cuid())
   sessionId   String
   session     AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questionId  String
+  question    AssessmentQuestion @relation(fields: [questionId], references: [id])
 
-  questionKey String  
-  questionText String
-  answerValue  String
+  questionKey String   
+  answerValue String   
 
   createdAt   DateTime @default(now())
 
+  @@unique([sessionId, questionId])
   @@map("assessment_answers")
 }
+
+model AssessmentOption {
+  id              String            @id @default(cuid())
+  questionId      String
+  question        AssessmentQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  label           String   // teks pilihan, e.g. "SMA/SMK"
+  value           String   // nilai yang disimpan, e.g. "SMA_SMK"
+  order           Int      // urutan tampil
+  nextQuestionKey String?  // key pertanyaan berikutnya (null = pertanyaan terakhir di jalur ini)
+
+  createdAt       DateTime @default(now())
+
+  @@map("assessment_options")
+}
+
 
 // CAREER RECOMMENDATION
 

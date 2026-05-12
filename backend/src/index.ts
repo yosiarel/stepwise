@@ -5,8 +5,9 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { prisma } from './lib/prisma.js';
 import { setupSwagger } from './swagger.js';
-import authRouter from './routes/authRouter.js';
+import authRouter from './routes/authRoute.js';
 import cvRouter from './routes/cvRoute.js';
+import assessmentRouter from './routes/assessmentRoute.js';
 import { errorHandler } from './middlewares/errorMiddleware.js';
 
 const app = express();
@@ -20,6 +21,7 @@ setupSwagger(app);
 
 app.use('/api/auth', authRouter);
 app.use('/api/cv', cvRouter);
+app.use('/api/assessment', assessmentRouter);
 
 /**
  * @openapi
