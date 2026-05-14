@@ -1,7 +1,7 @@
 import { PDFParse } from 'pdf-parse';
 import streamifier from 'streamifier';
 import cloudinary from '../lib/cloudinary.js';
-import { nvidiaClient, NVIDIA_MODEL } from '../lib/nvidia.js';
+import { nvidiaClient, NVIDIA_CV_MODEL } from '../lib/nvidia.js';
 import { prisma } from '../lib/prisma.js';
 import type { CvExtractedData, ReviewCvBody } from '../../types/cv.js';
 
@@ -79,7 +79,7 @@ Aturan:
 `;
 
   const completion = await nvidiaClient.chat.completions.create({
-    model: NVIDIA_MODEL,
+    model: NVIDIA_CV_MODEL,
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.2,
     top_p: 0.7,
