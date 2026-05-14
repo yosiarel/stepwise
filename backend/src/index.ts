@@ -8,6 +8,7 @@ import cvRouter from './routes/cvRoute.js';
 import assessmentRouter from './routes/assessmentRoute.js';
 import recommendationRouter from './routes/recommendationRoute.js';
 import roadmapRouter from './routes/roadmapRoute.js';
+import trackerRouter from './routes/trackerRoute.js';
 import { errorHandler } from './middlewares/errorMiddleware.js';
 
 const app = express();
@@ -24,6 +25,7 @@ app.use('/api/cv', cvRouter);
 app.use('/api/assessment', assessmentRouter);
 app.use('/api/recommendation', recommendationRouter);
 app.use('/api/roadmap', roadmapRouter);
+app.use('/api/tracker', trackerRouter);
 
 
 app.use(errorHandler);
