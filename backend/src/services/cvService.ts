@@ -1,7 +1,7 @@
 import { PDFParse } from 'pdf-parse';
 import streamifier from 'streamifier';
 import cloudinary from '../lib/cloudinary.js';
-import { geminiModel } from '../lib/gemini.js';
+import { nvidiaClient, NVIDIA_MODEL } from '../lib/nvidia.js';
 import { prisma } from '../lib/prisma.js';
 import type { CvExtractedData, ReviewCvBody } from '../../types/cv.js';
 
@@ -40,7 +40,7 @@ const extractTextFromPdf = async (buffer: Buffer): Promise<string> => {
 };
 
 
-const extractWithGemini = async (cvText: string): Promise<CvExtractedData> => {
+const extractWithNvidia = async (cvText: string): Promise<CvExtractedData> => {
   const prompt = `
 Kamu adalah sistem ekstraksi data CV yang presisi.
 Berikut adalah teks mentah dari sebuah CV:
@@ -78,8 +78,15 @@ Aturan:
 - Kembalikan HANYA JSON, tanpa markdown, tanpa komentar.
 `;
 
-  const result  = await geminiModel.generateContent(prompt);
-  const rawText = result.response.text().trim();
+  const completion = await nvidiaClient.chat.completions.create({
+    model: NVIDIA_MODEL,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.2,
+    top_p: 0.7,
+    max_tokens: 1024,
+  });
+
+  const rawText = completion.choices[0]?.message?.content?.trim() || '';
   const cleaned = rawText.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
 
   try {
@@ -166,7 +173,7 @@ export const extractCvService = async (userId: string, cvId: string) => {
     throw { status: 422, message: 'CV tidak dapat dibaca. Pastikan CV bukan berbasis gambar.' };
   }
 
-  const extractedData = await extractWithGemini(cvText);
+  const extractedData = await extractWithNvidia(cvText);
 
   await prisma.cvUpload.update({
     where: { id: cvId },

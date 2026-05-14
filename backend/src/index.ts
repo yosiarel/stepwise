@@ -1,13 +1,12 @@
 import 'dotenv/config';
 import express from 'express';
-import type { Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { prisma } from './lib/prisma.js';
 import { setupSwagger } from './swagger.js';
 import authRouter from './routes/authRoute.js';
 import cvRouter from './routes/cvRoute.js';
 import assessmentRouter from './routes/assessmentRoute.js';
+import recommendationRouter from './routes/recommendationRoute.js';
 import { errorHandler } from './middlewares/errorMiddleware.js';
 
 const app = express();
@@ -22,36 +21,8 @@ setupSwagger(app);
 app.use('/api/auth', authRouter);
 app.use('/api/cv', cvRouter);
 app.use('/api/assessment', assessmentRouter);
+app.use('/api/recommendation', recommendationRouter);
 
-/**
- * @openapi
- * /:
- *   get:
- *     description: Welcome to StepWise API
- *     responses:
- *       200:
- *         description: Returns a welcome message.
- */
-app.get('/', (req: Request, res: Response) => {
-  console.log('GET / request received');
-  res.send('Welcome to StepWise API! 🚀 (Updated)');
-});
-
-app.get('/api/health', async (req: Request, res: Response) => {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    res.status(200).json({ 
-      status: 'success', 
-      message: 'StepWise API is running and Database is connected! 🚀' 
-    });
-  } catch (error) {
-    console.error('Database connection error:', error);
-    res.status(500).json({ 
-      status: 'error', 
-      message: 'Database connection failed' 
-    });
-  }
-});
 
 app.use(errorHandler);
 

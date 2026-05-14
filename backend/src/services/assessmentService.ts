@@ -86,13 +86,19 @@ export const completeSessionService = async (userId: string, sessionId: string) 
   const answerMap: Record<string, string> = {};
   session.answers.forEach(a => { answerMap[a.questionKey] = a.answerValue; });
 
-  const itInterests: string[] = answerMap['Q3']
-    ? JSON.parse(answerMap['Q3'])
-    : [];
+  const safeParseArray = (val: string | undefined): string[] => {
+    if (!val) return [];
+    try {
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed : [String(parsed)];
+    } catch {
+      return [val];
+    }
+  };
 
-  const preferredStudyTime: string[] = answerMap['Q4B']
-    ? JSON.parse(answerMap['Q4B'])
-    : [];
+  const itInterests: string[] = safeParseArray(answerMap['Q3']);
+  const preferredStudyTime: string[] = safeParseArray(answerMap['Q4B']);
+
   const weeklyHoursRaw = answerMap['Q4A'] ?? null;
   const weeklyHoursMap: Record<string, number> = {
     '< 5':   3,
