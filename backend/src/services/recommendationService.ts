@@ -115,17 +115,7 @@ export const getOrGenerateRecommendationService = async (userId: string) => {
 
   const { profile } = user;
 
-  // extractedSkills disimpan sebagai Json? [{name, level}] — ambil hanya nama skillnya
-  const parseSkills = (raw: unknown): string[] => {
-    if (!raw || !Array.isArray(raw)) return [];
-    return raw
-      .map((s) => (typeof s === 'object' && s !== null && 'name' in s ? String(s.name) : null))
-      .filter((s): s is string => s !== null);
-  };
-
-  const extractedSkills = parseSkills(profile.extractedSkills);
-
-  if (!extractedSkills.length && !profile.itInterests.length) {
+  if (!profile.extractedSkills.length && !profile.itInterests.length) {
     throw {
       status:  400,
       message: 'Data profil tidak cukup untuk menghasilkan rekomendasi.',
@@ -135,7 +125,7 @@ export const getOrGenerateRecommendationService = async (userId: string) => {
   const prompt = buildRecommendationPrompt({
     educationHistory:   profile.educationHistory,
     workExperiences:    profile.workExperiences,
-    extractedSkills,
+    extractedSkills:    profile.extractedSkills,
     itBackground:       profile.itBackground,
     itInterests:        profile.itInterests,
     learningStyle:      profile.learningStyle,

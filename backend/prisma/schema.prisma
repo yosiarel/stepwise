@@ -122,7 +122,8 @@ model UserProfile {
   // Dari CV
   educationHistory  Json?    // [{institution, degree, major, year}]
   workExperiences   Json?    // [{company, role, duration, description}]
-  extractedSkills   Json?    // [{name: string, level: SkillLevel | null}]
+  extractedSkills   String[]  // raw skill names dari CV
+  skillLevels       Json?     // [{name: string, level: "BEGINNER"|"INTERMEDIATE"|"PROFESSIONAL"|null}]
 
   // Background IT (dikombinasikan dengan UserCategory untuk konteks Gemini)
   itBackground      Boolean? 
