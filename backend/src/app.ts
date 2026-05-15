@@ -14,7 +14,14 @@ import { errorHandler } from './middlewares/errorMiddleware.js';
 
 const app = express();
 
-app.use(cors());
+const frontendUrl = process.env.FRONTEND_URL || '*';
+
+app.use(cors({
+  origin: frontendUrl === '*' ? '*' : [frontendUrl],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+}));
 app.use(express.json());
 app.use(cookieParser());
 
