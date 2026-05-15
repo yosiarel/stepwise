@@ -54,6 +54,17 @@ enum AdjustmentDecision {
   REJECTED
 }
 
+enum NotificationType {
+  EVALUATION_REMINDER
+  ADJUSTMENT_PROPOSAL
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+}
+
+
 // USER & PROFILE
 
 model User {
@@ -66,6 +77,7 @@ model User {
   updatedAt      DateTime     @updatedAt
 
   profile               UserProfile?
+  refreshTokens         RefreshToken[]
   cvUploads             CvUpload[]
   assessmentSessions    AssessmentSession[]
   recommendationSessions RecommendationSession[]
@@ -73,7 +85,7 @@ model User {
   roadmaps              Roadmap[]
   evaluations           PeriodicEvaluation[]
   adjustmentProposals   AdjustmentProposal[]
-  refreshTokens         RefreshToken[]
+  notifications         Notification[]
 
   @@map("users")
 }
@@ -332,4 +344,22 @@ model AdjustmentProposal {
   createdAt    DateTime           @default(now())
 
   @@map("adjustment_proposals")
+}
+
+//Notification
+model Notification {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      NotificationType
+  status    NotificationStatus @default(UNREAD)
+  title     String
+  body      String
+  metadata  Json?              // e.g. { evaluationId, roadmapId }
+
+  createdAt DateTime           @default(now())
+  readAt    DateTime?
+
+  @@map("notifications")
 }
