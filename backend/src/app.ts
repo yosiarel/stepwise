@@ -9,6 +9,7 @@ import recommendationRouter from './routes/recommendationRoute.js';
 import roadmapRouter from './routes/roadmapRoute.js';
 import trackerRouter from './routes/trackerRoute.js';
 import evaluationRouter from './routes/evaluationRoute.js';
+import advisorRouter from './routes/advisorRoute.js';
 import { errorHandler } from './middlewares/errorMiddleware.js';
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/recommendation', recommendationRouter);
 app.use('/api/roadmap', roadmapRouter);
 app.use('/api/tracker', trackerRouter);
 app.use('/api/evaluation', evaluationRouter);
+app.use('/api/advisor', advisorRouter);
 
 app.use(errorHandler);
 

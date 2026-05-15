@@ -107,7 +107,7 @@ export const findEvaluationWithContext = async (evaluationId: string) => {
 export const createAdjustmentProposals = async (
   userId:      string,
   roadmapId:   string,
-  evaluationId: string,
+  evaluationId: string | null,
   proposals: {
     type:        string;
     description: string;
