@@ -5,15 +5,15 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "target": "esnext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "strict": true,
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
     "skipLibCheck": true
   },
   "include": ["src/**/*", "types/**/*"],
   "exclude": ["node_modules", "dist", "prisma"]
-}
+}
+
