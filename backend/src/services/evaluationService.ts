@@ -83,7 +83,11 @@ Aturan penting:
 export const triggerEvaluationService = async (userId: string) => {
   const roadmap = await prisma.roadmap.findFirst({
     where:   { userId, status: 'ACTIVE' },
-    include: { materials: true },
+    include: { 
+      materials: true,
+      user: true,
+      recommendation: true 
+    },
   });
 
   if (!roadmap) {
@@ -109,8 +113,26 @@ export const triggerEvaluationService = async (userId: string) => {
     readinessPercentAtEval: percent,
   });
 
+  // Kirim email (Untuk testing & integrasi)
+  try {
+    const { sendEmail, buildEvaluationReminderEmail } = await import('../util/Email.js');
+    await sendEmail({
+      to:      roadmap.user.email,
+      subject: '⏰ Waktunya evaluasi progres belajarmu di StepWise!',
+      html:    buildEvaluationReminderEmail({
+        name:            roadmap.user.name,
+        professionTitle: roadmap.recommendation.professionTitle,
+        completedCount:  completed,
+        totalCount:      total,
+        percent,
+      }),
+    });
+  } catch (emailErr) {
+    console.error('Failed to send trigger email:', emailErr);
+  }
+
   return {
-    message:      'Evaluasi siap diisi. Luangkan 2–3 menit untuk refleksi.',
+    message:      'Evaluasi siap diisi. Email pengingat telah dikirim.',
     evaluationId: evaluation.id,
     isNew:        true,
     snapshot:     { completed, total, percent },
@@ -121,6 +143,9 @@ export const submitReflectionService = async (
   userId: string,
   body:   SubmitReflectionBody
 ) => {
+  if (!body || !body.evaluationId) {
+    throw { status: 400, message: 'Data evaluasi tidak lengkap.' };
+  }
   const { evaluationId, paceComfort, interestShifted, timeAvailabilityNote, freeNotes } = body;
 
   const evaluation = await findEvaluationWithContext(evaluationId);

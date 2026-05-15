@@ -11,17 +11,10 @@ export const findActiveRoadmap = async (userId: string) => {
 };
 
 export const deactivateActiveRoadmaps = async (userId: string) => {
-  const actives = await prisma.roadmap.findMany({
-    where: { userId, status: 'ACTIVE' },
-    select: { id: true },
+  await prisma.roadmap.updateMany({
+    where: { activeForUserId: userId },
+    data:  { activeForUserId: null, status: 'REPLACED' },
   });
-
-  for (const r of actives) {
-    await prisma.roadmap.update({
-      where: { id: r.id },
-      data:  { status: 'REPLACED', activeForUserId: null },
-    });
-  }
 };
 
 export const createRoadmapWithMaterials = async (
