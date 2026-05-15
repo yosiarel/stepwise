@@ -5,7 +5,7 @@
     "watchPatterns": ["backend/**"]
   },
   "deploy": {
-    "startCommand": "npm run migrate:deploy && npm start",
+    "startCommand": "npm run migrate:deploy; npm start",
     "healthcheckPath": "/health",
     "restartPolicyType": "ON_FAILURE"
   }
