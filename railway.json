@@ -6,7 +6,6 @@
   },
   "deploy": {
     "startCommand": "npm run migrate:deploy && npm start",
-    "rootDirectory": "backend",
     "healthcheckPath": "/health",
     "restartPolicyType": "ON_FAILURE"
   }
