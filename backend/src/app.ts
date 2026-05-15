@@ -14,6 +14,11 @@ import { errorHandler } from './middlewares/errorMiddleware.js';
 
 const app = express();
 
+// Health check — harus pertama agar Railway tidak timeout
+app.get('/health', (_req: express.Request, res: express.Response) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 const frontendUrl = process.env.FRONTEND_URL || '*';
 
 app.use(cors({
@@ -38,7 +43,4 @@ app.use('/api/advisor', advisorRouter);
 
 app.use(errorHandler);
 
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
 export default app;
