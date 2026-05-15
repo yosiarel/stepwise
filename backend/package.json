@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "npx prisma generate && npx tsc",
+    "build": "npx prisma generate && npx tsc && node -e \"require('fs').cpSync('generated', 'dist/generated', {recursive: true})\"",
     "start": "node dist/src/index.js",
     "migrate:deploy": "npx prisma migrate deploy",
     "postinstall": "npx prisma generate"
