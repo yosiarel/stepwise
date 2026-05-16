@@ -3,8 +3,8 @@ import {
   getOrGenerateRecommendation,
   selectCareer,
   getSelectedCareer,
-} from '../controllers/recommendationController.js';
-import { authenticate } from '../middlewares/authenticateMiddleware.js';
+} from '../controllers/recommendation.controller.js';
+import { authenticate } from '../middlewares/authenticate.middleware.js';
 
 const router = Router();
 
@@ -52,8 +52,14 @@ router.use(authenticate);
  *                           rank:             { type: integer }
  *                           professionTitle:  { type: string }
  *                           readinessPercent: { type: integer }
- *                           ownedSkills:      { type: array, items: { type: string } }
- *                           missingSkills:    { type: array, items: { type: string } }
+ *                           skills:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 skillName:    { type: string }
+ *                                 currentLevel: { type: string, nullable: true }
+ *                                 targetLevel:  { type: string }
  *                           reasonSummary:    { type: string }
  *                           isSelected:       { type: boolean }
  *                           professionOverview:

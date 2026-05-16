@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { uploadCv, extractCv, reviewCv, getCvList } from '../controllers/cvController.js';
-import { authenticate } from '../middlewares/authenticateMiddleware.js';
-import { uploadMiddleware } from '../middlewares/uploadMiddleware.js';
+import { uploadCv, extractCv, reviewCv, getCvList } from '../controllers/cv.controller.js';
+import { authenticate } from '../middlewares/authenticate.middleware.js';
+import { uploadMiddleware } from '../middlewares/upload.middleware.js';
 
 const router = Router();
 

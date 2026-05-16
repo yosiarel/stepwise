@@ -1,8 +1,8 @@
 import { nvidiaClient, NVIDIA_ROADMAP_MODEL } from '../lib/nvidia.js';
-import { buildAdvisorContext } from '../repositories/advisorRepository.js';
+import { buildAdvisorContext } from '../repositories/advisor.repository.js';
 import type { ChatMessage, AdvisorContext } from '../../types/advisor.js';
-import { createAdjustmentProposals } from '../repositories/evaluationRepository.js';
-import { createNotification } from '../repositories/evaluationRepository.js';
+import { createAdjustmentProposals } from '../repositories/evaluation.repository.js';
+import { createNotification } from '../repositories/evaluation.repository.js';
 import { prisma } from '../lib/prisma.js';
 
 const MAX_HISTORY = 20;
@@ -41,8 +41,8 @@ Kamu bukan sekadar chatbot tanya-jawab. Kamu memahami SELURUH konteks perjalanan
 ${ctx.selectedCareer
   ? `**Profesi Target:** ${ctx.selectedCareer.professionTitle}
 **Kesiapan Kerja:** ${ctx.selectedCareer.readinessPercent}%
-**Skill sudah dimiliki:** ${ctx.selectedCareer.ownedSkills.join(', ')}
-**Skill yang masih perlu dipelajari:** ${ctx.selectedCareer.missingSkills.join(', ')}`
+**Detail Skill Gap:**
+${JSON.stringify(ctx.selectedCareer.skills, null, 2)}`
   : 'Belum memilih target karier.'}
 
 ## PROGRES ROADMAP

@@ -13,11 +13,13 @@ datasource db {
 }
 
 enum UserCategory {
-  PELAJAR_SMA_SMK
-  MAHASISWA
-  FRESH_GRADUATE
-  PROFESIONAL
-  UMUM            
+  PELAJAR_SMA_SMK  // Pelajar SMA/SMK
+  MAHASISWA        // Mahasiswa aktif
+  FRESH_GRADUATE   // Fresh Graduate
+  BEKERJA          // Sudah bekerja
+  TIDAK_BEKERJA    // Tidak/belum bekerja
+  UMUM             // Umum
+  LAINNYA          // Lainnya
 }
 
 enum AssessmentStatus {
@@ -52,6 +54,12 @@ enum AdjustmentDecision {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  PROFESSIONAL
 }
 
 enum NotificationType {
@@ -112,9 +120,10 @@ model UserProfile {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Dari CV
-  educationHistory  Json?    
-  workExperiences   Json?    
-  extractedSkills   String[] 
+  educationHistory  Json?    // [{institution, degree, major, year}]
+  workExperiences   Json?    // [{company, role, duration, description}]
+  extractedSkills   String[]  // raw skill names dari CV
+  skillLevels       Json?     // [{name: string, level: "BEGINNER"|"INTERMEDIATE"|"PROFESSIONAL"|null}]
 
   // Background IT (dikombinasikan dengan UserCategory untuk konteks Gemini)
   itBackground      Boolean? 
@@ -167,15 +176,16 @@ model AssessmentSession {
 }
 
 model AssessmentQuestion {
-  id           String   @id @default(cuid())
-  key          String   @unique  
-  text         String            
-  helpText     String?           
-  inputType    String            
-  order        Int               
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(cuid())
+  key            String   @unique
+  text           String
+  helpText       String?
+  inputType      String            // "single_choice" | "multi_choice"
+  maxSelections  Int?              // hanya untuk multi_choice, null = unlimited
+  order          Int
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   options      AssessmentOption[]
   answers      AssessmentAnswer[]
@@ -238,8 +248,8 @@ model CareerRecommendation {
   rank              Int    
   professionTitle   String
   readinessPercent  Int     
-  ownedSkills       String[]
-  missingSkills     String[]
+  skills            Json     
+
   reasonSummary     String
   professionOverview Json   
 
@@ -249,7 +259,6 @@ model CareerRecommendation {
 
   @@map("career_recommendations")
 }
-
 // ROADMAP & MATERI
 
 model Roadmap {

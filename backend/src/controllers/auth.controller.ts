@@ -4,7 +4,7 @@ import {
   loginService,
   refreshService,
   logoutService,
-} from '../services/authService.js';
+} from '../services/auth.service.js';
 import {
   setAccessTokenCookie,
   setRefreshTokenCookie,

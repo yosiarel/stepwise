@@ -1,7 +1,7 @@
 import type { SubmitAnswerBody } from '../../types/assessment.js';
-import * as repo from '../repositories/assessmentRepository.js';
+import * as repo from '../repositories/assessment.repository.js';
 
-const FIRST_QUESTION_KEY = 'Q1';
+const FIRST_QUESTION_KEY = 'FASE1';
 
 const getQuestionByKey = async (key: string) => {
   const question = await repo.findQuestionByKey(key);
@@ -96,30 +96,35 @@ export const completeSessionService = async (userId: string, sessionId: string) 
     }
   };
 
-  const itInterests: string[] = safeParseArray(answerMap['Q3']);
-  const preferredStudyTime: string[] = safeParseArray(answerMap['Q4B']);
+  const itInterests: string[] = [
+    ...safeParseArray(answerMap['FASE2A_2']),
+    ...safeParseArray(answerMap['FASE2B_1'])
+  ];
+  
+  // Gaya Belajar & Lingkungan Kerja
+  const learningStyle = answerMap['FASE3_2'] ?? null;
+  const workEnvPreference = answerMap['FASE3_3'] ?? null;
 
-  const weeklyHoursRaw = answerMap['Q4A'] ?? null;
+  const weeklyHoursRaw = answerMap['FASE3_5'] ?? null;
   const weeklyHoursMap: Record<string, number> = {
-    '< 5':   3,
+    '<5':   3,
     '5-10':  7,
     '10-20': 15,
-    '> 20':  25,
+    '>20':  25,
   };
   const weeklyHours = weeklyHoursRaw ? (weeklyHoursMap[weeklyHoursRaw] ?? null) : null;
 
-  const q2Answer = answerMap['Q2A'] ?? answerMap['Q2B'] ?? answerMap['Q2C'] ??
-                   answerMap['Q2D'] ?? answerMap['Q2E'] ?? null;
-  const itBackgroundValues = ['SMK_IT', 'IT_CORE', 'IT_SI', 'IT', 'KERJA_IT'];
-  const itBackground = q2Answer ? itBackgroundValues.includes(q2Answer) : null;
+  // IT Background based on FASE1 routing (C/D are tech paths)
+  const fase1Answer = answerMap['FASE1'] ?? null;
+  const itBackground = fase1Answer ? ['C', 'D'].includes(fase1Answer) : null;
 
   await repo.upsertUserProfileData(userId, {
     itInterests,
-    preferredStudyTime,
+    learningStyle,
+    workEnvPreference,
     weeklyHours,
     itBackground
   });
-
   await repo.updateSessionStatus(sessionId, 'COMPLETED');
 
   return { message: 'Asesmen selesai. Profil kamu telah diperbarui.' };

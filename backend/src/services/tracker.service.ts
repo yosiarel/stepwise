@@ -1,4 +1,4 @@
-import { getActiveRoadmapWithMaterials } from '../repositories/trackerRepository.js';
+import { getActiveRoadmapWithMaterials } from '../repositories/tracker.repository.js';
 import type { 
   TrackerMaterial, 
   ActivityDay, 

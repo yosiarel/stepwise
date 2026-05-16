@@ -4,7 +4,7 @@ import {
   extractCvService,
   reviewCvService,
   getCvListService,
-} from '../services/cvService.js';
+} from '../services/cv.service.js';
 
 export const uploadCv = async (req: Request, res: Response, next: NextFunction) => {
   try {

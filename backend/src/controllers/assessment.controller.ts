@@ -3,7 +3,7 @@ import {
   startSessionService,
   submitAnswerService,
   getSessionSummaryService,
-} from '../services/assessmentService.js';
+} from '../services/assessment.service.js';
 
 export const startSession = async (req: Request, res: Response, next: NextFunction) => {
   try {

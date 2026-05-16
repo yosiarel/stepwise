@@ -7,25 +7,46 @@ import {
   findMaterialById,
   markMaterialComplete,
   getRoadmapProgressSummary,
-} from '../repositories/roadmapRepository.js';
+} from '../repositories/roadmap.repository.js';
 import type { RoadmapMaterialAI, RoadmapAIResponse } from '../../types/roadmap.js';
+import type { SkillEntry } from '../../types/recommendation.js';
 
+const formatSkillsContext = (skills: SkillEntry[]): { owned: string; gap: string } => {
+  const owned = skills
+    .filter(s => s.currentLevel !== null && s.currentLevel === s.targetLevel)
+    .map(s => `${s.skillName} (${s.currentLevel})`)
+    .join(', ') || 'Belum ada';
+
+  const gap = skills
+    .filter(s => s.currentLevel === null || s.currentLevel !== s.targetLevel)
+    .map(s => {
+      if (!s.currentLevel)
+        return `${s.skillName}: Belum dikuasai → target ${s.targetLevel}`;
+      return `${s.skillName}: ${s.currentLevel} → target ${s.targetLevel}`;
+    })
+    .join('\n') || 'Tidak ada gap';
+
+  return { owned, gap };
+};
 
 const buildRoadmapPrompt = (params: {
   professionTitle:    string;
-  ownedSkills:        string[];
-  missingSkills:      string[];
+  skills:             SkillEntry[];
   weeklyHours:        number;
   preferredStudyTime: string[];
-}): string => `
+}): string => {
+  const { owned, gap } = formatSkillsContext(params.skills);
+
+  return `
 Kamu adalah kurator roadmap pembelajaran IT yang berpengalaman.
 Tugasmu adalah menyusun roadmap belajar yang terstruktur, realistis, dan personal.
 
 ## KONTEKS USER
 
 **Target Profesi:** ${params.professionTitle}
-**Skill yang Sudah Dimiliki:** ${params.ownedSkills.join(', ') || 'Belum ada'}
-**Skill yang Perlu Dipelajari:** ${params.missingSkills.join(', ')}
+**Skill yang Sudah Tercapai:** ${owned}
+**Skill yang Perlu Ditingkatkan:**
+${gap}
 **Jam Belajar per Minggu:** ${params.weeklyHours} jam
 **Waktu Belajar Favorit:** ${params.preferredStudyTime.join(', ') || 'Fleksibel'}
 
@@ -35,9 +56,11 @@ Susun roadmap materi pembelajaran dengan ketentuan:
 1. Urutkan dari yang paling FUNDAMENTAL ke LANJUTAN (jangan melompat langkah)
 2. Bagi ke dalam 3 fase: "Fondasi", "Inti", "Lanjutan"
 3. "durationDays" = estimasi hari yang dibutuhkan berdasarkan ${params.weeklyHours} jam/minggu
-4. Skill yang sudah dimiliki tetap masukkan sebagai review singkat di "Fondasi" (durationDays lebih pendek, max 5 hari)
-5. Total materi: 8–15 item (proporsional dengan jumlah skill yang perlu dipelajari)
-6. Judul materi harus spesifik (bukan generik), contoh: "Belajar Pandas untuk Manipulasi Data", bukan "Python"
+4. Skill yang sudah tercapai tetap masukkan sebagai review singkat di "Fondasi" (durationDays max 3 hari)
+5. Skill dengan gap besar (belum dikuasai → advanced) beri durationDays lebih panjang
+6. Skill yang perlu ditingkatkan (beginner → advanced) beri durationDays menengah
+7. Total materi: 8–15 item (proporsional dengan jumlah skill gap)
+8. Judul materi harus spesifik, contoh: "Belajar Pandas untuk Manipulasi Data", bukan "Python"
 
 Kembalikan HANYA JSON valid tanpa markdown dan tanpa komentar:
 
@@ -53,6 +76,7 @@ Kembalikan HANYA JSON valid tanpa markdown dan tanpa komentar:
   ]
 }
 `;
+};
 
 const parseAIResponse = (raw: string): RoadmapAIResponse => {
   const cleaned = raw.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
@@ -100,10 +124,12 @@ export const generateRoadmapService = async (userId: string) => {
     };
   }
 
+  // Cast skills dari Json ke SkillEntry[]
+  const skills = (recommendation.skills ?? []) as SkillEntry[];
+
   const prompt = buildRoadmapPrompt({
     professionTitle:    recommendation.professionTitle,
-    ownedSkills:        recommendation.ownedSkills,
-    missingSkills:      recommendation.missingSkills,
+    skills,
     weeklyHours:        profile.weeklyHours,
     preferredStudyTime: profile.preferredStudyTime,
   });
@@ -116,7 +142,7 @@ export const generateRoadmapService = async (userId: string) => {
     max_tokens:  2048,
   });
 
-  const rawText = completion.choices[0]?.message?.content?.trim() || '';
+  const rawText = completion.choices[0]?.message?.content?.trim() ?? '';
   const parsed  = parseAIResponse(rawText);
 
   if (!parsed.materials?.length) {
@@ -128,8 +154,8 @@ export const generateRoadmapService = async (userId: string) => {
     order:       m.order,
     phase:       m.phase,
     title:       m.title,
-    description: m.description || null,
-    scheduledAt: scheduledDates[i] || null,
+    description: m.description ?? null,
+    scheduledAt: scheduledDates[i] ?? null,
   }));
 
   await deactivateActiveRoadmaps(userId);
@@ -191,7 +217,6 @@ export const completeMaterialService = async (userId: string, materialId: string
     material: updated,
   };
 };
-
 
 export const getRoadmapProgressService = async (userId: string) => {
   const progress = await getRoadmapProgressSummary(userId);

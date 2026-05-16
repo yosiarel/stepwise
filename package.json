@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "start": "npm start --prefix backend",
+    "build": "npm run build --prefix backend"
+  },
   "dependencies": {
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.7"
