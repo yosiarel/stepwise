@@ -10,9 +10,10 @@ import {
   Eye, 
   EyeOff, 
   Loader2,
-  AlertCircle
+  AlertCircle 
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import authService from '../services/authService';
 // REVISI: Di-comment agar tidak memicu error linter karena tidak lagi digunakan setelah Footer dihapus dari UI
 // import Footer from '../components/Footer';
 
@@ -68,10 +69,15 @@ const RegisterPage = () => {
     setError('');
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await authService.register({
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        category: formData.status
+      });
       navigate('/login');
-    } catch {
-      setError('Terjadi kesalahan saat mendaftar.');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Terjadi kesalahan saat mendaftar.');
     } finally {
       setIsLoading(false);
     }
@@ -140,12 +146,12 @@ const RegisterPage = () => {
                     className="w-full h-[48px] bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] pl-10 pr-4 focus:border-[#3B82F6] focus:bg-white outline-none text-sm appearance-none cursor-pointer transition-all"
                   >
                     <option value="" disabled>Pilih Status</option>
-                    <option value="Pelajar SMA/SMK">Pelajar SMA/SMK</option>
-                    <option value="Mahasiswa">Mahasiswa</option>
-                    <option value="Fresh Graduate">Fresh Graduate</option>
-                    <option value="Bekerja">Bekerja</option>
-                    <option value="Tidak Bekerja">Tidak Bekerja</option>
-                    <option value="Lainnya">Lainnya</option>
+                    <option value="PELAJAR_SMA_SMK">Pelajar SMA/SMK</option>
+                    <option value="MAHASISWA">Mahasiswa</option>
+                    <option value="FRESH_GRADUATE">Fresh Graduate</option>
+                    <option value="BEKERJA">Bekerja</option>
+                    <option value="TIDAK_BEKERJA">Tidak Bekerja</option>
+                    <option value="LAINNYA">Lainnya</option>
                   </select>
                 </div>
               </div>

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import authService from '../services/authService';
+import { useAuthStore } from '../store/useAuthStore';
 // REVISI: Di-comment agar tidak memicu error linter karena tidak lagi digunakan setelah Footer dihapus
 // import Footer from '../components/Footer';
 
@@ -17,11 +19,17 @@ const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    const setAuth = useAuthStore(state => state.setAuth);
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await authService.login({
+        email,
+        password,
+      });
+      setAuth(response.data);
       navigate('/dashboard');
-    } catch {
-      setError('Email atau Kata Sandi salah.');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Email atau Kata Sandi salah.');
     } finally {
       setIsLoading(false);
     }
