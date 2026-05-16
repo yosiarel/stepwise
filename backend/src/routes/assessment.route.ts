@@ -37,7 +37,7 @@ router.use(authenticate);
  *                     question:
  *                       type: object
  *                       properties:
- *                         key:       { type: string, example: "Q1" }
+ *                         key:       { type: string, example: "FASE1" }
  *                         text:      { type: string }
  *                         helpText:  { type: string, nullable: true }
  *                         inputType: { type: string, enum: [single_choice, multi_choice, number, time_multi] }
@@ -77,11 +77,11 @@ router.post('/start', startSession);
  *             properties:
  *               questionKey:
  *                 type: string
- *                 example: Q1
+ *                 example: FASE1
  *               answerValue:
  *                 oneOf:
  *                   - type: string
- *                     example: SMA_SMK
+ *                     example: A
  *                   - type: array
  *                     items:
  *                       type: string

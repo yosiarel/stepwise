@@ -16,8 +16,7 @@ export const buildAdvisorContext = async (userId: string): Promise<AdvisorContex
       select: {
         professionTitle:  true,
         readinessPercent: true,
-        ownedSkills:      true,
-        missingSkills:    true,
+        skills:           true,
       },
     }),
 

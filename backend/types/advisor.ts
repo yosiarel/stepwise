@@ -22,8 +22,7 @@ export interface AdvisorContext {
   selectedCareer: {
     professionTitle:  string;
     readinessPercent: number;
-    ownedSkills:      string[];
-    missingSkills:    string[];
+    skills:           any; 
   } | null;
   roadmap: {
     status:      string;

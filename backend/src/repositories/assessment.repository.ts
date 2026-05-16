@@ -94,10 +94,12 @@ export const findSessionWithAnswersAndQuestions = async (sessionId: string) => {
 export const upsertUserProfileData = async (
   userId: string,
   data: {
-    itInterests: string[];
-    preferredStudyTime: string[];
-    weeklyHours: number | null;
-    itBackground: boolean | null;
+    itInterests:        string[];
+    learningStyle?:     string | null;
+    workEnvPreference?: string | null;
+    weeklyHours:        number | null;
+    itBackground:       boolean | null;
+    preferredStudyTime?: string[];
   }
 ) => {
   return prisma.userProfile.upsert({

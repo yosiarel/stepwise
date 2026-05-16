@@ -9,21 +9,22 @@ import {
   findSelectedRecommendation,
 } from '../repositories/recommendation.repository.js';
 import type {
-    GeminiRecommendationResponse,
-    SelectCareerBody,
+  GeminiRecommendationResponse,
+  SelectCareerBody,
 } from '../../types/recommendation.js';
 
 const buildRecommendationPrompt = (profile: {
-  educationHistory:  unknown;
-  workExperiences:   unknown;
-  extractedSkills:   string[];
-  itBackground:      boolean | null;
-  itInterests:       string[];
-  learningStyle:     string | null;
-  workEnvPreference: string | null;
-  weeklyHours:       number | null;
+  educationHistory:   unknown;
+  workExperiences:    unknown;
+  extractedSkills:    string[];
+  skillLevels:        unknown;
+  itBackground:       boolean | null;
+  itInterests:        string[];
+  learningStyle:      string | null;
+  workEnvPreference:  string | null;
+  weeklyHours:        number | null;
   preferredStudyTime: string[];
-  category:          string | null;
+  category:           string | null;
 }): string => {
   return `
 Kamu adalah sistem rekomendasi karier IT yang akurat dan empatik untuk platform StepWise.
@@ -40,8 +41,8 @@ ${JSON.stringify(profile.educationHistory, null, 2)}
 **Pengalaman Kerja:**
 ${JSON.stringify(profile.workExperiences, null, 2)}
 
-**Skill yang Dimiliki:**
-${profile.extractedSkills.join(', ') || 'Belum ada data'}
+**Skill yang Dimiliki beserta Level:**
+${JSON.stringify(profile.skillLevels, null, 2) || profile.extractedSkills.join(', ') || 'Belum ada data'}
 
 **Minat Bidang IT:**
 ${profile.itInterests.join(', ') || 'Belum ditentukan'}
@@ -61,8 +62,13 @@ Kembalikan HANYA JSON valid tanpa markdown, tanpa komentar, dengan struktur beri
       "rank": 1,
       "professionTitle": "nama profesi IT",
       "readinessPercent": 0-100,
-      "ownedSkills": ["skill yang sudah dimiliki user dan relevan dengan profesi ini"],
-      "missingSkills": ["skill spesifik yang masih perlu dipelajari, bukan generik"],
+      "skills": [
+        {
+          "nama_skill": "nama skill spesifik",
+          "level_saat_ini": "beginner" | "intermediate" | "advanced" | null,
+          "level_target": "beginner" | "intermediate" | "advanced"
+        }
+      ],
       "reasonSummary": "2-3 kalimat alasan konkret mengapa profesi ini cocok untuk user ini",
       "professionOverview": {
         "dailyTasks": ["tanggung jawab harian yang spesifik"],
@@ -75,9 +81,12 @@ Kembalikan HANYA JSON valid tanpa markdown, tanpa komentar, dengan struktur beri
 
 ## ATURAN PENTING
 - readinessPercent harus jujur berdasarkan skill gap nyata, bukan dibuat tinggi agar user senang
-- missingSkills harus spesifik (e.g. "React.js", bukan "programming")
-- Urutkan dari yang paling sesuai (rank 1) ke yang paling kurang sesuai (rank 3)
+- skills harus spesifik (e.g. "React.js", bukan "programming")
+- level_saat_ini: gunakan data skill user jika ada, null jika skill belum pernah dipelajari sama sekali
+- level_target: level minimum standar industri yang dibutuhkan untuk profesi tersebut
+- Urutkan skills: null (gap terbesar) dulu, lalu yang level_saat_ini < level_target, lalu yang sudah tercapai
 - Pertimbangkan waktu belajar user — jika weeklyHours rendah, rekomendasikan profesi yang gap-nya lebih kecil
+- Urutkan rekomendasi dari yang paling sesuai (rank 1) ke yang paling kurang sesuai (rank 3)
 - Kembalikan HANYA JSON, tidak ada teks lain
 `;
 };
@@ -126,6 +135,7 @@ export const getOrGenerateRecommendationService = async (userId: string) => {
     educationHistory:   profile.educationHistory,
     workExperiences:    profile.workExperiences,
     extractedSkills:    profile.extractedSkills,
+    skillLevels:        profile.skillLevels,
     itBackground:       profile.itBackground,
     itInterests:        profile.itInterests,
     learningStyle:      profile.learningStyle,

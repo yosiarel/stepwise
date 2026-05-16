@@ -248,8 +248,8 @@ model CareerRecommendation {
   rank              Int    
   professionTitle   String
   readinessPercent  Int     
-  ownedSkills       String[]
-  missingSkills     String[]
+  skills            Json     
+
   reasonSummary     String
   professionOverview Json   
 
@@ -259,7 +259,6 @@ model CareerRecommendation {
 
   @@map("career_recommendations")
 }
-
 // ROADMAP & MATERI
 
 model Roadmap {

@@ -5,7 +5,7 @@ export const findActiveSession = async (userId: string) => {
   return prisma.recommendationSession.findFirst({
     where: { userId, status: 'ACTIVE' },
     include: {
-      recommendations: {    
+      recommendations: {
         orderBy: { rank: 'asc' },
       },
     },
@@ -19,7 +19,6 @@ export const archiveActiveSessions = async (userId: string) => {
   });
 };
 
-
 export const createRecommendationSession = async (
   userId: string,
   items:  CareerRecommendationItem[]
@@ -32,8 +31,7 @@ export const createRecommendationSession = async (
           rank:               item.rank,
           professionTitle:    item.professionTitle,
           readinessPercent:   item.readinessPercent,
-          ownedSkills:        item.ownedSkills,
-          missingSkills:      item.missingSkills,
+          skills:             item.skills,      
           reasonSummary:      item.reasonSummary,
           professionOverview: item.professionOverview,
         })),

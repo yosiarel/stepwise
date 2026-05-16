@@ -41,8 +41,8 @@ Kamu bukan sekadar chatbot tanya-jawab. Kamu memahami SELURUH konteks perjalanan
 ${ctx.selectedCareer
   ? `**Profesi Target:** ${ctx.selectedCareer.professionTitle}
 **Kesiapan Kerja:** ${ctx.selectedCareer.readinessPercent}%
-**Skill sudah dimiliki:** ${ctx.selectedCareer.ownedSkills.join(', ')}
-**Skill yang masih perlu dipelajari:** ${ctx.selectedCareer.missingSkills.join(', ')}`
+**Detail Skill Gap:**
+${JSON.stringify(ctx.selectedCareer.skills, null, 2)}`
   : 'Belum memilih target karier.'}
 
 ## PROGRES ROADMAP
