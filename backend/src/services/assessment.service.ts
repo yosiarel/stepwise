@@ -1,5 +1,5 @@
 import type { SubmitAnswerBody } from '../../types/assessment.js';
-import * as repo from '../repositories/assessmentRepository.js';
+import * as repo from '../repositories/assessment.repository.js';
 
 const FIRST_QUESTION_KEY = 'Q1';
 

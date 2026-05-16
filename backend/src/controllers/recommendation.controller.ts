@@ -3,7 +3,7 @@ import {
   getOrGenerateRecommendationService,
   selectCareerService,
   getSelectedCareerService,
-} from '../services/recommendationService.js';
+} from '../services/recommendation.service.js';
 
 export const getOrGenerateRecommendation = async (
   req: Request,

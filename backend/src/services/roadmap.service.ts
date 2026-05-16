@@ -7,7 +7,7 @@ import {
   findMaterialById,
   markMaterialComplete,
   getRoadmapProgressSummary,
-} from '../repositories/roadmapRepository.js';
+} from '../repositories/roadmap.repository.js';
 import type { RoadmapMaterialAI, RoadmapAIResponse } from '../../types/roadmap.js';
 
 

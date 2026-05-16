@@ -3,7 +3,7 @@ import {
   getTrackerSummaryService,
   getTrackerActivityService,
   getTrackerPhasesService,
-} from '../services/trackerService.js';
+} from '../services/tracker.service.js';
 
 export const getTrackerSummary = async (req: Request, res: Response, next: NextFunction) => {
   try {

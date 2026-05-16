@@ -3,8 +3,8 @@ import {
   getOrGenerateRecommendation,
   selectCareer,
   getSelectedCareer,
-} from '../controllers/recommendationController.js';
-import { authenticate } from '../middlewares/authenticateMiddleware.js';
+} from '../controllers/recommendation.controller.js';
+import { authenticate } from '../middlewares/authenticate.middleware.js';
 
 const router = Router();
 

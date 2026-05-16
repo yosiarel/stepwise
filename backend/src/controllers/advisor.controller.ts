@@ -3,7 +3,7 @@ import {
   sendMessageService,
   clearHistoryService,
   getHistoryService,
-} from '../services/advisorService.js';
+} from '../services/advisor.service.js';
 
 export const sendMessage = async (req: Request, res: Response, next: NextFunction) => {
   try {

@@ -9,7 +9,7 @@ import {
   findPendingProposals,
   decideProposal,
   createNotification,
-} from '../repositories/evaluationRepository.js';
+} from '../repositories/evaluation.repository.js';
 import type { SubmitReflectionBody, AIEvaluationResult } from '../../types/evaluation.js';
 
 const calcReadiness = (completed: number, total: number): number =>
@@ -339,7 +339,7 @@ const executeApprovedProposal = async (roadmapId: string, proposal: {
 };
 
 export const getNotificationsService = async (userId: string) => {
-  const { findUserNotifications } = await import('../repositories/evaluationRepository.js');
+  const { findUserNotifications } = await import('../repositories/evaluation.repository.js');
   return findUserNotifications(userId);
 };
 
@@ -348,6 +348,6 @@ export const readNotificationService = async (userId: string, notificationId: st
   if (!notif)                throw { status: 404, message: 'Notifikasi tidak ditemukan.' };
   if (notif.userId !== userId) throw { status: 403, message: 'Akses ditolak.' };
 
-  const { markNotificationRead } = await import('../repositories/evaluationRepository.js');
+  const { markNotificationRead } = await import('../repositories/evaluation.repository.js');
   return markNotificationRead(notificationId);
 };

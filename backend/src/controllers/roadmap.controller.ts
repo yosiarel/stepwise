@@ -4,7 +4,7 @@ import {
   getActiveRoadmapService,
   completeMaterialService,
   getRoadmapProgressService,
-} from '../services/roadmapService.js';
+} from '../services/roadmap.service.js';
 
 export const generateRoadmap = async (req: Request, res: Response, next: NextFunction) => {
   try {

@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { findDueEvaluations, createPendingEvaluation, createNotification } from '../repositories/evaluationRepository.js';
+import { findDueEvaluations, createPendingEvaluation, createNotification } from '../repositories/evaluation.repository.js';
 import { sendEmail, buildEvaluationReminderEmail } from '../util/Email.js';
 import { prisma } from '../lib/prisma.js';
 

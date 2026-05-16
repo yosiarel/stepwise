@@ -6,8 +6,8 @@ import {
   decideProposal,
   getNotifications,
   readNotification,
-} from '../controllers/evaluationController.js';
-import { authenticate } from '../middlewares/authenticateMiddleware.js';
+} from '../controllers/evaluation.controller.js';
+import { authenticate } from '../middlewares/authenticate.middleware.js';
 
 const router = Router();
 

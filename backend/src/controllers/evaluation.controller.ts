@@ -6,7 +6,7 @@ import {
   decideProposalService,
   getNotificationsService,
   readNotificationService,
-} from '../services/evaluationService.js';
+} from '../services/evaluation.service.js';
 
 export const triggerEvaluation = async (req: Request, res: Response, next: NextFunction) => {
   try {

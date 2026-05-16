@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { sendMessage, getHistory, clearHistory } from '../controllers/advisorController.js';
-import { authenticate } from '../middlewares/authenticateMiddleware.js';
+import { sendMessage, getHistory, clearHistory } from '../controllers/advisor.controller.js';
+import { authenticate } from '../middlewares/authenticate.middleware.js';
 
 const router = Router();
 router.use(authenticate);

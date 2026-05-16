@@ -3,8 +3,8 @@ import {
   getTrackerSummary,
   getTrackerActivity,
   getTrackerPhases,
-} from '../controllers/trackerController.js';
-import { authenticate } from '../middlewares/authenticateMiddleware.js';
+} from '../controllers/tracker.controller.js';
+import { authenticate } from '../middlewares/authenticate.middleware.js';
 
 const router = Router();
 

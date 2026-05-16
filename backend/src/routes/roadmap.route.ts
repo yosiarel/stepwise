@@ -4,8 +4,8 @@ import {
   getActiveRoadmap,
   completeMaterial,
   getRoadmapProgress,
-} from '../controllers/roadmapController.js';
-import { authenticate } from '../middlewares/authenticateMiddleware.js';
+} from '../controllers/roadmap.controller.js';
+import { authenticate } from '../middlewares/authenticate.middleware.js';
 
 const router = Router();
 

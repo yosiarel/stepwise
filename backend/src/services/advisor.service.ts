@@ -1,8 +1,8 @@
 import { nvidiaClient, NVIDIA_ROADMAP_MODEL } from '../lib/nvidia.js';
-import { buildAdvisorContext } from '../repositories/advisorRepository.js';
+import { buildAdvisorContext } from '../repositories/advisor.repository.js';
 import type { ChatMessage, AdvisorContext } from '../../types/advisor.js';
-import { createAdjustmentProposals } from '../repositories/evaluationRepository.js';
-import { createNotification } from '../repositories/evaluationRepository.js';
+import { createAdjustmentProposals } from '../repositories/evaluation.repository.js';
+import { createNotification } from '../repositories/evaluation.repository.js';
 import { prisma } from '../lib/prisma.js';
 
 const MAX_HISTORY = 20;

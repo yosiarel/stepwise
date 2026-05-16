@@ -7,7 +7,7 @@ import {
   findRecommendationById,
   selectCareerTarget,
   findSelectedRecommendation,
-} from '../repositories/recommendationRepository.js';
+} from '../repositories/recommendation.repository.js';
 import type {
     GeminiRecommendationResponse,
     SelectCareerBody,
