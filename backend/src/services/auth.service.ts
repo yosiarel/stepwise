@@ -12,7 +12,7 @@ const hashToken = (token: string): string => {
 };
 
 export const registerService = async (body: RegisterBody) => {
-  const { name, email, password } = body;
+  const { name, email, password, category } = body;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -22,8 +22,8 @@ export const registerService = async (body: RegisterBody) => {
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
   const user = await prisma.user.create({
-    data: { name, email, passwordHash },
-    select: { id: true, name: true, email: true, createdAt: true },
+    data: { name, email, passwordHash, category: category as any },
+    select: { id: true, name: true, email: true, category: true, createdAt: true },
   });
 
   return user;
@@ -59,7 +59,7 @@ export const loginService = async (body: LoginBody) => {
   return {
     accessToken,
     refreshToken: rawRefreshToken, 
-    user: { id: user.id, name: user.name, email: user.email },
+    user: { id: user.id, name: user.name, email: user.email, category: user.category },
   };
 };
 
