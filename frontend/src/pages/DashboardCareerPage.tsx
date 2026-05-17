@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import { Eye, Check, ArrowRight, Award, X, Briefcase, Building, TrendingUp, Loader2 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
-import careerService from '../services/careerService'; // Hubungkan dengan Service buatan temanmu
-import type { Recommendation } from '../types/career'; // Hubungkan dengan Type TypeScript baru
+import careerService from '../services/careerService'; 
+import type { Recommendation } from '../types/career';
 
 const DashboardCareerPage = () => {
   const navigate = useNavigate(); 
@@ -14,15 +14,13 @@ const DashboardCareerPage = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [modalData, setModalData] = useState<Recommendation | null>(null);
 
-  // FETCH DATA REKOMENDASI ASLI DARI BACKEND
   useEffect(() => {
     const fetchCareerData = async () => {
       try {
         setIsLoading(true);
-        const response = await careerService.getRecommendations(); // Panggil API backend
+        const response = await careerService.getRecommendations(); 
         setRecommendations(response.recommendations);
         
-        // Cari rekomendasi yang status isSelected-nya true untuk dijadikan target aktif default
         const activeCareer = response.recommendations.find(r => r.isSelected) || response.recommendations[0];
         if (activeCareer) {
           setSelectedId(activeCareer.id);
@@ -52,12 +50,11 @@ const DashboardCareerPage = () => {
 
   const currentSelectedProfession = recommendations.find(p => p.id === selectedId);
 
-  // UPDATE TARGET KARIER AKTIF KE DATABASE
   const handleUpdateTarget = async () => {
     if (!selectedId) return;
     try {
       setIsUpdating(true);
-      await careerService.selectCareer(selectedId); // Kirim id pilihan ke database backend
+      await careerService.selectCareer(selectedId); 
       alert(`Sukses! Target karier Anda berhasil diperbarui ke: ${currentSelectedProfession?.professionTitle}`);
       navigate('/dashboard/roadmap'); 
     } catch (error) {
@@ -68,7 +65,6 @@ const DashboardCareerPage = () => {
     }
   };
 
-  // HALAMAN LOADING STATE (UX Premium saat Fetching Data)
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -93,12 +89,10 @@ const DashboardCareerPage = () => {
           </p>
         </div>
 
-        {/* GRID KARTU PROFESI REAL DARI DATABASE */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 xl:gap-8 items-stretch">
           {recommendations.map((prof) => {
             const isSelected = selectedId === prof.id;
             
-            // Filter skill yang sudah dikuasai vs yang masih gap berdasarkan currentLevel
             const skillsHave = prof.skills.filter(s => s.currentLevel !== null);
             const skillsGap = prof.skills.filter(s => s.currentLevel === null);
 
@@ -176,7 +170,6 @@ const DashboardCareerPage = () => {
           })}
         </div>
 
-        {/* STICKY BOTTOM ACTION BAR */}
         <div className="sticky bottom-0 mt-8 w-full bg-white/90 backdrop-blur-md border border-slate-200/80 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-2xl px-5 xl:px-8 py-4 z-30 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all">
           <div className="flex items-center gap-3 text-center sm:text-left">
             <div className="w-10 h-10 bg-[#EFF6FF] rounded-xl flex items-center justify-center text-[#3B82F6] shrink-0 hidden sm:flex">
@@ -208,7 +201,6 @@ const DashboardCareerPage = () => {
 
       </div>
 
-      {/* COMPONENT MODAL DETAIL REKOMENDASI */}
       {isModalOpen && modalData && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fadeIn">
           <div className="bg-white w-full max-w-[1100px] xl:max-w-[1200px] 2xl:max-w-[1280px] rounded-[24px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh] border border-slate-100 transition-all">
@@ -269,7 +261,6 @@ const DashboardCareerPage = () => {
                 </div>
               </div>
 
-              {/* LIST LEVEL BINDING SKILL */}
               <div className="md:col-span-5 flex flex-col h-full border-t md:border-t-0 md:border-l border-slate-100 pt-6 md:pt-0 md:pl-6">
                 <div className="mb-4">
                   <h4 className="text-[#1E3A5F] text-[14px] font-extrabold uppercase tracking-wider mb-1">Daftar Skill & Target Belajar</h4>

@@ -12,7 +12,6 @@ const roadmapService = {
     return response.data.data;
   },
 
-  // PERBAIKAN UTAMA: Mengganti Promise<any> menjadi Promise<RoadmapMaterial> agar lolos validasi strict linting
   async completeMaterial(materialId: string): Promise<RoadmapMaterial> {
     const response = await axiosInstance.patch(`/roadmap/material/${materialId}/complete`);
     return response.data.data;

@@ -27,34 +27,27 @@ interface HistoricalReflection {
 }
 
 const EvaluationPage = () => {
-  // State Manajemen Data Dinamis Backend
   const [proposals, setProposals] = useState<AdjustmentProposal[]>([]);
   const [lastReflection, setLastReflection] = useState<HistoricalReflection | null>(null);
   
-  // State Kendali Komponen UI Form Modal Refleksi Baru
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [activeEvaluationId, setActiveEvaluationId] = useState<string | null>(null);
   const [paceComfort, setPaceComfort] = useState<'too_slow' | 'comfortable' | 'too_fast'>('comfortable');
   const [careerConfidence, setCareerConfidence] = useState<'Ya' | 'Ragu' | 'Tidak'>('Ya');
   const [freeNote, setFreeNote] = useState<string>('');
 
-  // State Kontrol Transisi Tampilan UI
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // FUNGSI UTAMA: Memuat Seluruh Matriks Evaluasi dari API Backend
   const loadEvaluationData = async () => {
     try {
-      // 1. Tarik antrean proposal penyesuaian aktif yang bertipe PENDING dari database
       const propData = await evaluationService.getPendingProposals();
       setProposals(propData.proposals || []);
 
-      // 2. Tarik capaian persentase progres aktual siswa dari tracker service
       const summary = await trackerService.getSummary();
       const currentActualPercent = summary.overallProgress.percent;
 
-      // 3. Petakan ringkasan data sesi refleksi berkala terakhir
       setLastReflection({
         date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
         paceQuestion: 'Seberapa nyaman dengan kecepatan belajar?',
@@ -63,7 +56,7 @@ const EvaluationPage = () => {
         careerAnswer: 'Ya, Sangat Yakin',
         notesQuestion: 'Catatan tambahan',
         notesAnswer: 'Pemahaman materi arsitektur modular berjalan baik. Siap melangkah ke fase berikutnya.',
-        targetPercent: Math.min(currentActualPercent + 12, 100), // Estimasi kurikulum ideal sebanding progres aktual
+        targetPercent: Math.min(currentActualPercent + 12, 100), 
         actualPercent: currentActualPercent
       });
 
@@ -74,7 +67,6 @@ const EvaluationPage = () => {
     }
   };
 
-  // SOLUSI LINTER: Menjadwalkan ke makrotask queue asinkronus untuk menghindari cascading renders
   useEffect(() => {
     const timer = setTimeout(() => {
       loadEvaluationData();
@@ -82,7 +74,6 @@ const EvaluationPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // HANDLER: Klik Tombol Pemicu Sesi Evaluasi Manual Baru ke API
   const handleOpenEvaluationModal = async () => {
     try {
       setIsSubmitting(true);
@@ -98,7 +89,6 @@ const EvaluationPage = () => {
     }
   };
 
-  // HANDLER: Kirim Isian Form Kuesioner Pengguna Menuju Mesin Analisis AI
   const handleSubmitReflection = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeEvaluationId) return;
@@ -106,7 +96,6 @@ const EvaluationPage = () => {
     try {
       setIsSubmitting(true);
       
-      // Petakan opsi keyakinan karier lokal menjadi boolean interestShifted yang dipahami backend
       const interestShiftedParam = careerConfidence !== 'Ya';
 
       const result = await evaluationService.submitReflection({
@@ -122,10 +111,8 @@ const EvaluationPage = () => {
         : "Refleksi terkirim! Analisis AI menyatakan kurikulum belajarmu tetap berjalan optimal! 🚀"
       );
       
-      // Bersihkan form
       setFreeNote('');
       
-      // Segarkan data halaman secara aman
       setIsLoading(true);
       await loadEvaluationData();
 
@@ -138,12 +125,10 @@ const EvaluationPage = () => {
     }
   };
 
-  // HANDLER: Eksekusi Persetujuan / Penolakan Proposal Adaptif ke Database
   const handleDecideProposal = async (id: string, action: 'APPROVED' | 'REJECTED') => {
     try {
       await evaluationService.decideProposal(id, action);
       
-      // Saring keluar card proposal dari state lokal secara dinamis setelah sukses terekam di database
       setProposals(prev => prev.filter(p => p.id !== id));
       
       setToastMessage(action === 'APPROVED' 
@@ -171,23 +156,18 @@ const EvaluationPage = () => {
 
   return (
     <DashboardLayout>
-      {/* Lebar Maksimal Konten: 1200px Sesuai DESIGN.md */}
       <div className="w-full max-w-[1200px] mx-auto font-sans text-[#1F2937] px-4 md:px-0 transition-all relative space-y-6">
         
-        {/* HEADER AREA UTAMA APP PATTERN */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            {/* Display H1: 28px Bold, leading 36px, text-[#1F2937] */}
             <h1 className="text-[28px] font-bold leading-[36px] text-[#1F2937] tracking-tight mb-1 flex items-center gap-3">
               <BarChart2 className="text-[#3B82F6]" size={26} /> Evaluasi & Progres Belajar
             </h1>
-            {/* Body M Default: 16px Regular, leading 24px, text-[#6B7280] */}
             <p className="text-[16px] font-normal leading-[24px] text-[#6B7280]">
               Pantau kestabilan ritme belajar dan sesuaikan roadmap secara adaptif bersama AI Advisor.
             </p>
           </div>
 
-          {/* Button Primary: h-48px, px-24px, bg-[#1E3A5F], text-white, radius-8px */}
           <button
             onClick={handleOpenEvaluationModal}
             className="h-[48px] px-6 bg-[#1E3A5F] hover:bg-[#152A44] active:bg-[#0F1E33] text-white font-medium text-[16px] rounded-[8px] transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer shrink-0"
@@ -196,22 +176,17 @@ const EvaluationPage = () => {
           </button>
         </div>
 
-        {/* LAYOUT CARD 1: RINGKASAN EVALUASI TERAKHIR & MATRIKS PROGRES BERDAMPINGAN */}
-        {/* Default Card Style Sesuai DESIGN.md: BG White, Radius 12px, Border #D1D5DB, Shadow, Padding 24px (p-6) */}
         {lastReflection && (
           <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] space-y-6">
             <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-4">
-              {/* Title H3: 18px SemiBold, leading 24px */}
               <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
                 <Bookmark size={18} className="text-[#3B82F6]" /> Ringkasan Evaluasi Terakhir
               </h3>
-              {/* Caption Text Style: 14px Regular, text-[#6B7280] */}
               <span className="text-[14px] font-normal leading-[20px] text-[#6B7280] bg-[#F3F4F6] px-3 py-1 rounded-[8px]">
                 Sesi: {lastReflection.date}
               </span>
             </div>
 
-            {/* MATRIKS PERTANYAAN & JAWABAN (HORIZONTAL 3 KOLOM DESKTOP, COLLAPSE ON MOBILE) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]">
                 <span className="text-[12px] font-normal text-[#6B7280] block uppercase tracking-wide mb-1">
@@ -241,30 +216,25 @@ const EvaluationPage = () => {
               </div>
             </div>
 
-            {/* PERBANDINGAN PROGRES BERDAMPINGAN (HORIZONTAL 2 KOLOM Sesuai Gambar Rancangan Anda) */}
             <div className="space-y-3 pt-4 border-t border-[#E5E7EB]">
               <h4 className="text-[16px] font-medium text-[#1F2937]">Perbandingan Progres</h4>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Progress Bar Target Ideal Kurikulum */}
                 <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]">
                   <div className="flex justify-between text-[14px] font-normal text-[#6B7280] mb-2">
                     <span>Target Kurikulum Ideal</span>
                     <span className="font-semibold text-[#1E3A5F]">{lastReflection.targetPercent}%</span>
                   </div>
-                  {/* Progress Bar Specs: Track #E5E7EB, Height 12px (h-3), Fill #3B82F6 */}
                   <div className="w-full bg-[#E5E7EB] h-3 rounded-full overflow-hidden">
                     <div className="bg-[#3B82F6] h-full rounded-full transition-all duration-500" style={{ width: `${lastReflection.targetPercent}%` }}></div>
                   </div>
                 </div>
 
-                {/* Progress Bar Capaian Aktual Real Time Pengguna */}
                 <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]">
                   <div className="flex justify-between text-[14px] font-normal text-[#10B981] mb-2">
                     <span className="font-medium">Realisasi Progres Aktual Anda</span>
                     <span className="font-bold text-[#10B981]">{lastReflection.actualPercent}%</span>
                   </div>
-                  {/* Progress Bar Specs: Track #E5E7EB, Height 12px (h-3), Fill #10B981 */}
                   <div className="w-full bg-[#E5E7EB] h-3 rounded-full overflow-hidden">
                     <div className="bg-[#10B981] h-full rounded-full transition-all duration-500" style={{ width: `${lastReflection.actualPercent}%` }}></div>
                   </div>
@@ -275,7 +245,6 @@ const EvaluationPage = () => {
           </div>
         )}
 
-        {/* LAYOUT SEKSI: DAFTAR USULAN PENYESUAIAN DARI SISTEM BACKEND */}
         <div className="space-y-4">
           <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2 px-1">
             <Sparkles size={18} className="text-[#F59E0B]" /> Usulan Penyesuaian dari Sistem
@@ -296,7 +265,6 @@ const EvaluationPage = () => {
                 >
                   <div className="space-y-1.5 flex-grow min-w-0">
                     <div className="flex items-center gap-2">
-                      {/* Token Warna Warning Light BG #FEF3C7 & Text Warning #F59E0B */}
                       <span className="text-[12px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-[4px] bg-[#FEF3C7] text-[#F59E0B]">
                         {prop.type.replace('_', ' ')}
                       </span>
@@ -304,13 +272,11 @@ const EvaluationPage = () => {
                         <Clock size={12} /> Rekomendasi
                       </span>
                     </div>
-                    {/* Body L Emphasis: 16px Medium, text-[#1F2937] */}
                     <p className="text-[16px] font-medium leading-[24px] text-[#1F2937] break-words">
                       {prop.description}
                     </p>
                   </div>
 
-                  {/* Kelompok Tombol Aksi Blok Token Button Setinggi 48px */}
                   <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                     <button
                       onClick={() => handleDecideProposal(prop.id, 'APPROVED')}
@@ -331,15 +297,10 @@ const EvaluationPage = () => {
           )}
         </div>
 
-        {/* ========================================================
-            MODAL INTERAKTIF: POPUP FORMULIR KUESIONER REFLEKSI BARU 
-           ======================================================== */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Dark Blur Overlay: #1F2937 Opacity 40% */}
             <div className="fixed inset-0 bg-[#1F2937]/40 backdrop-blur-sm transition-opacity duration-300" onClick={() => setIsModalOpen(false)} />
             
-            {/* Modal Large Container: Background White, Radius 12px, Shadow Elevated */}
             <div className="bg-white w-full max-w-lg rounded-[12px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] border border-[#E5E7EB] z-10 overflow-hidden transform transition-all animate-scaleIn">
               
               <div className="px-6 py-4 bg-[#F3F4F6] border-b border-[#E5E7EB] flex items-center justify-between">
@@ -351,10 +312,8 @@ const EvaluationPage = () => {
 
               <form onSubmit={handleSubmitReflection} className="p-6 space-y-4">
                 
-                {/* PERTANYAAN 1: Kecepatan Belajar */}
                 <div className="space-y-1.5">
                   <label className="text-[16px] font-medium text-[#1F2937] block">Seberapa nyaman dengan kecepatan belajar?</label>
-                  {/* Select Form Control Token: Height 48px, BG #F3F4F6, Border 1px #D1D5DB, Radius 8px */}
                   <select 
                     value={paceComfort}
                     onChange={(e) => setPaceComfort(e.target.value as 'too_slow' | 'comfortable' | 'too_fast')}
@@ -366,7 +325,6 @@ const EvaluationPage = () => {
                   </select>
                 </div>
 
-                {/* PERTANYAAN 2: Keyakinan Target Karier */}
                 <div className="space-y-1.5">
                   <label className="text-[16px] font-medium text-[#1F2937] block">Apakah masih yakin dengan target karier?</label>
                   <div className="flex gap-3">
@@ -387,7 +345,6 @@ const EvaluationPage = () => {
                   </div>
                 </div>
 
-                {/* PERTANYAAN 3: Catatan Bebas Tambahan */}
                 <div className="space-y-1.5">
                   <label className="text-[16px] font-medium text-[#1F2937] block">Catatan tambahan</label>
                   <textarea
@@ -399,14 +356,11 @@ const EvaluationPage = () => {
                   />
                 </div>
 
-                {/* TRANSPARENCY DISCLAIMER AI SYSTEM RULES */}
                 <div className="text-[12px] font-normal text-[#6B7280] leading-[16px] bg-[#FEF3C7] border border-[#FEF3C7] p-3 rounded-[8px]">
                   <b>Penafian Transparansi AI:</b> Output, kesimpulan saran, dan usulan restrukturisasi materi bersifat sugestif pembantu navigasi, bukan keputusan mutlak yang mengikat kurikulum akhir Anda.
                 </div>
 
-                {/* AREA PANEL TOMBOL AKSI MODAL */}
                 <div className="pt-4 border-t border-[#E5E7EB] flex items-center justify-end gap-2">
-                  {/* Batal Button: Secondary Outline Style setinggi 48px */}
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
@@ -428,7 +382,6 @@ const EvaluationPage = () => {
           </div>
         )}
 
-        {/* TOAST NOTIFICATION SPECIFICATION: BG #1F2937, Pojok Kanan Atas */}
         {toastMessage && (
           <div className="fixed top-6 right-6 bg-[#1F2937] text-white px-4 py-3 rounded-[8px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] font-medium text-[14px] leading-[20px] animate-slideInRight z-50 flex items-center gap-2 border border-[#E5E7EB]/10 max-w-[80vw]">
             <Check size={16} strokeWidth={3} className="shrink-0 text-[#10B981]" /> 

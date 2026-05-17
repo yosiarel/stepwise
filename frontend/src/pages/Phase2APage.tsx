@@ -14,7 +14,6 @@ const Phase2APage = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Jika tidak ada sessionId (user refresh halaman), arahkan balik ke profiling
   useEffect(() => {
     if (!sessionId) {
       navigate('/assessment/profiling');
@@ -62,14 +61,12 @@ const Phase2APage = () => {
         setSelectedOptions([]);
         window.scrollTo(0, 0);
         
-        // Cek jika pindah fase untuk update ProgressBar (opsional, bisa dari key)
         if (response.nextQuestion.key.startsWith('FASE3')) {
           navigate('/assessment/phase-3');
         } else if (response.nextQuestion.key.startsWith('FASE2B')) {
           navigate('/assessment/phase-2-b');
         }
       } else {
-        // Jika tidak ada pertanyaan lagi, berarti selesai
         navigate('/assessment/analysis');
       }
     } catch (error) {
@@ -80,7 +77,6 @@ const Phase2APage = () => {
     }
   };
 
-  // Menentukan label progress bar berdasarkan key pertanyaan
   const getPhaseLabel = () => {
     if (currentQuestion.key.startsWith('FASE2')) return 'Fase 2: Eksplorasi Minat';
     if (currentQuestion.key.startsWith('FASE3')) return 'Fase 3: Gaya & Preferensi';
@@ -93,7 +89,6 @@ const Phase2APage = () => {
 
       <main className="flex-grow py-6 md:py-8 px-4 flex items-center justify-center">
         
-        {/* REVISI TAKTIS: Mengubah max-w-[960px] menjadi w-full dengan breakpoint xl dan 2xl agar grid opsi memuai proporsional di layar monitor desktop besar */}
         <div className="w-full max-w-[960px] xl:max-w-[1140px] 2xl:max-w-[1240px] mx-auto transition-all">
           
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[#6B7280] hover:text-[#1E3A5F] font-bold text-[13px] mb-4 transition-colors">
@@ -107,7 +102,7 @@ const Phase2APage = () => {
 
           <div className="text-center mb-6">
             <h2 className="text-[#1E3A5F] text-[22px] md:text-[26px] font-bold leading-tight mb-4 max-w-[750px] xl:max-w-[900px] mx-auto">
-              {currentData.question}
+              {currentQuestion.text}
             </h2>
             
             <div className="flex justify-center">
@@ -122,7 +117,7 @@ const Phase2APage = () => {
               <OptionCard 
                 key={opt.id}
                 label={opt.label}
-                description={''} // Backend seeder saat ini belum ada field deskripsi per opsi
+                description={''} 
                 isSelected={selectedOptions.includes(opt.value)}
                 onSelect={() => handleSelect(opt.value)}
               />

@@ -22,7 +22,7 @@ interface LocalMessage {
   text: string;
   time: string;
   proposal?: {
-    id: string; // ID proposal dari database untuk eksekusi API
+    id: string;
     type: 'SCHEDULE_SPEED' | 'ADD_MATERIAL' | 'CHANGE_CAREER' | 'REORDER_MATERIAL';
     description: string;
     status: 'pending' | 'approved' | 'rejected';
@@ -58,7 +58,6 @@ const AdvisorPage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // LOAD HISTORY DARI BACKEND SAAT HALAMAN DIBUKA
   useEffect(() => {
     const loadChatHistory = async () => {
       try {
@@ -85,7 +84,6 @@ const AdvisorPage = () => {
         }
       } catch (error) {
         console.error('Gagal mengambil histori chat:', error);
-        // Fallback jika terjadi error koneksi awal
         setMessages([
           {
             id: 'init-msg',
@@ -115,7 +113,6 @@ const AdvisorPage = () => {
     scrollToBottom();
   }, [messages, isSending]);
 
-  // HANDLER: Mengirim Pesan Baru ke AI
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || isSending) return;
@@ -174,7 +171,6 @@ const AdvisorPage = () => {
     }
   };
 
-  // HANDLER: Reset Sesi Percakapan Baru
   const handleNewChat = async () => {
     try {
       setIsSending(true);
@@ -205,7 +201,6 @@ const AdvisorPage = () => {
     }
   };
 
-  // HANDLER INTERAKTIF: Kirim Keputusan Proposal ke Database Berdasarkan ID
   const handleSuggestionAction = async (messageId: string, action: 'approve' | 'reject', proposalId?: string, description?: string) => {
     if (!proposalId) {
       alert('ID proposal tidak valid atau tidak terdeteksi oleh sistem.');
@@ -215,10 +210,8 @@ const AdvisorPage = () => {
     try {
       const decisionParam = action === 'approve' ? 'APPROVED' : 'REJECTED';
       
-      // Tembak keputusan ke backend untuk memicu adaptasi sistem otomatis
       await advisorService.respondToProposal(proposalId, decisionParam);
 
-      // Sinkronisasikan perubahan status di local state secara instan
       setMessages(prevMessages => prevMessages.map(msg => {
         if (msg.id === messageId && msg.proposal) {
           return { ...msg, proposal: { ...msg.proposal, status: action === 'approve' ? 'approved' : 'rejected' } };
@@ -235,7 +228,6 @@ const AdvisorPage = () => {
       }
     } catch (error) {
       console.error('Gagal memproses keputusan proposal:', error);
-      // Assertion error ramah linter
       const axiosError = error as { response?: { data?: { message?: string } } };
       alert(axiosError.response?.data?.message || 'Gagal mengirimkan keputusan ke server. Silakan coba kembali.');
     }
@@ -252,7 +244,6 @@ const AdvisorPage = () => {
           />
         )}
 
-        {/* PANEL KIRI: RIWAYAT PERCAKAPAN */}
         <aside className={`bg-slate-50 border-r border-slate-200/60 flex flex-col justify-between transition-transform duration-300 absolute md:relative z-40 h-full shrink-0 ${
           isHistoryExpanded ? 'translate-x-0 w-[260px] xl:w-[280px]' : '-translate-x-full md:translate-x-0 md:w-[60px]'
         }`}>
@@ -309,7 +300,6 @@ const AdvisorPage = () => {
           </button>
         </aside>
 
-        {/* PANEL KANAN: AREA CHAT WINDOW */}
         <section className="flex-grow flex flex-col justify-between bg-white min-w-0 relative h-full">
           
           <div className="px-4 md:px-5 xl:px-6 py-2.5 xl:py-4 border-b border-slate-200/80 flex items-center justify-between bg-white shrink-0">
@@ -338,7 +328,6 @@ const AdvisorPage = () => {
             </div>
           </div>
 
-          {/* AREA BUBBLE PESAN */}
           <div ref={chatContainerRef} className="flex-grow p-4 xl:p-6 overflow-y-auto space-y-4 md:space-y-5 xl:space-y-6 bg-slate-50/40">
             {isLoadingHistory ? (
               <div className="h-full w-full flex flex-col items-center justify-center gap-2 text-slate-400">
@@ -427,7 +416,6 @@ const AdvisorPage = () => {
             )}
           </div>
 
-          {/* INPUT FORM */}
           <div className="p-3 xl:p-4 border-t border-slate-200/80 bg-white shrink-0">
             <form onSubmit={handleSendMessage} className="w-full flex items-center gap-1.5 md:gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2 xl:px-3 h-[42px] xl:h-[48px] focus-within:border-[#3B82F6] focus-within:bg-white transition-all shadow-inner">
               <button 
@@ -460,7 +448,6 @@ const AdvisorPage = () => {
             </span>
           </div>
 
-          {/* TOAST CONFIRMATION */}
           {toastMessage && (
             <div className="absolute top-16 md:top-20 right-4 md:right-6 bg-emerald-600 text-white px-4 md:px-5 py-2.5 md:py-3 rounded-xl shadow-xl font-bold text-[12px] md:text-[13px] tracking-wide animate-slideInRight z-50 flex items-center gap-2 border border-emerald-500 max-w-[80vw]">
               <Check size={16} strokeWidth={3} className="shrink-0" /> 

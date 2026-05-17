@@ -23,11 +23,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // State Kendali Responsiveness Buka-Tutup Sidebar
   const [isDesktopExpanded, setIsDesktopExpanded] = useState<boolean>(true); 
   const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false); 
 
-  // Menutup otomatis mobile drawer jika user melebarkan layar ke desktop
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
@@ -51,7 +49,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const renderSidebarContent = (isExpanded: boolean, isMobileView = false) => (
     <>
       <div className="flex flex-col gap-5">
-        {/* Tombol Hamburger internal di paling atas sidebar (Hanya Desktop) */}
         {!isMobileView && (
           <button
             onClick={() => setIsDesktopExpanded(!isDesktopExpanded)}
@@ -64,7 +61,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           </button>
         )}
 
-        {/* Informasi Akun User */}
         <div className={`p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center ${isExpanded ? 'gap-3' : 'justify-center'}`}>
           <div className="w-9 h-9 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center font-bold text-[14px] shrink-0">
             H
@@ -77,10 +73,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           )}
         </div>
 
-        {/* List Menu Item Navigasi */}
         <nav className="flex flex-col gap-1">
           {sidebarMenu.map((menu, i) => {
-            // Logika deteksi menu aktif berdasarkan URL saat ini
             const isActive = location.pathname === menu.path || (menu.path !== '/dashboard' && location.pathname.startsWith(menu.path));
             
             return (
@@ -104,7 +98,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </nav>
       </div>
 
-      {/* Bagian Bawah Sidebar */}
       <div className="pt-4 border-t border-slate-100 flex flex-col gap-1">
         <button className={`w-full h-[40px] rounded-lg flex items-center text-[13.5px] font-bold text-slate-500 hover:bg-slate-50 hover:text-[#1E3A5F] transition-colors ${isExpanded ? 'px-3 gap-3 justify-start' : 'px-0 justify-center'}`}>
           <HelpCircle size={18} />
@@ -124,7 +117,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-[#F8F9FF] font-sans flex flex-col antialiased relative">
       
-      {/* HEADER/NAVBAR UNIFIED STICKY */}
       <header className="w-full bg-white border-b border-slate-200/80 px-4 md:px-8 h-16 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-4">
           <button 
@@ -139,7 +131,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </div>
       </header>
 
-      {/* Mobile Slide-Over Menu Drawer */}
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex">
           <div 
@@ -159,10 +150,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </div>
       )}
 
-      {/* Structural Main Page Grid Layout Architecture */}
       <div className="flex flex-grow w-full mx-auto relative items-start">
         
-        {/* ASIDE STICKY DESKTOP */}
         <aside 
           className={`bg-white border-r border-slate-200/80 p-4 hidden md:flex flex-col justify-between sticky top-16 h-[calc(100vh-64px)] shrink-0 z-20 transition-all duration-300 ease-in-out ${
             isDesktopExpanded ? 'w-[260px]' : 'w-[76px]'
@@ -171,7 +160,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {renderSidebarContent(isDesktopExpanded, false)}
         </aside>
 
-        {/* Right Content Panel (Diinjeksi dengan parameter children) */}
         <div className="flex-grow flex flex-col min-w-0 min-h-[calc(100vh-64px)]">
           
           <main className="flex-grow p-4 md:p-8 xl:p-10 2xl:p-14 overflow-x-hidden transition-all">

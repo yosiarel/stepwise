@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Upload, Plus, ArrowLeft, User, Target, GraduationCap, Briefcase, Loader2, Sparkles, CheckCircle2
@@ -8,6 +8,24 @@ import Footer from '../components/Footer';
 import SkillItem from '../components/verify/SkillItem';
 import cvService from '../services/cvService';
 import { useAuthStore } from '../store/useAuthStore';
+
+interface ExtractedEducation {
+  degree?: string;
+  major?: string;
+  institution?: string;
+}
+
+interface ExtractedWork {
+  role?: string;
+  company?: string;
+}
+
+interface ExtractedInfo {
+  name?: string;
+  educationHistory?: ExtractedEducation[];
+  workExperiences?: ExtractedWork[];
+  extractedSkills?: string[];
+}
 
 interface SkillEntry {
   id: number;
@@ -19,81 +37,63 @@ const VerifyDataPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuthStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Ambil state hasil ekstraksi dari UploadCVPage
-  const { cvId, extractedInfo } = (location.state || {}) as { cvId?: string; extractedInfo?: any };
+  const { cvId, extractedInfo } = (location.state || {}) as { cvId?: string; extractedInfo?: ExtractedInfo | null };
 
-  // States untuk Form & Skill
-  const [formData, setFormData] = useState({
-    fullName: 'Harry Phalosa',
-    email: 'harry.phalosa@example.com',
-    education: 'S1 Teknik Informatika - Universitas Brawijaya',
-    experience: 'Fullstack Developer Intern'
-  });
-
-  const [skills, setSkills] = useState<SkillEntry[]>([
-    { id: 1, name: 'React.js', level: 'Intermediate' },
-    { id: 2, name: 'Node.js', level: 'Beginner' }
-  ]);
-
-  // Loading States
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'saving' | 'success' | 'error'>('saving');
-  const [errorMsg, setErrorMsg] = useState('');
-
-  // Sinkronisasi data dari hasil ekstraksi AI CV / Profile User
-  useEffect(() => {
-    // 1. Tentukan Nama & Email (Prioritaskan data auth login pengguna)
+  const [formData, setFormData] = useState(() => {
     const name = user?.name || extractedInfo?.name || 'Harry Phalosa';
     const email = user?.email || 'harry.phalosa@example.com';
 
-    // 2. Format Pendidikan
     let educationStr = 'S1 Teknik Informatika - Universitas Brawijaya';
     if (extractedInfo?.educationHistory && extractedInfo.educationHistory.length > 0) {
       const firstEdu = extractedInfo.educationHistory[0];
       educationStr = `${firstEdu.degree || 'S1'} ${firstEdu.major || 'Teknik Informatika'} - ${firstEdu.institution || 'Universitas Brawijaya'}`;
     }
 
-    // 3. Format Pengalaman
     let experienceStr = 'Fullstack Developer Intern';
     if (extractedInfo?.workExperiences && extractedInfo.workExperiences.length > 0) {
       const firstExp = extractedInfo.workExperiences[0];
       experienceStr = `${firstExp.role || 'Software Engineer'} di ${firstExp.company || 'StepWise Partner'}`;
     }
 
-    // Set Form Data
-    setFormData({
+    return {
       fullName: name,
       email: email,
       education: educationStr,
       experience: experienceStr
-    });
+    };
+  });
 
-    // 4. Format Skills
+  const [skills, setSkills] = useState<SkillEntry[]>(() => {
     if (extractedInfo?.extractedSkills && extractedInfo.extractedSkills.length > 0) {
-      const mappedSkills = extractedInfo.extractedSkills.map((sk: string, idx: number) => ({
+      return extractedInfo.extractedSkills.map((sk, idx) => ({
         id: idx + 1,
         name: sk,
         level: 'Intermediate'
       }));
-      setSkills(mappedSkills);
     }
-  }, [user, extractedInfo]);
+    return [
+      { id: 1, name: 'React.js', level: 'Intermediate' },
+      { id: 2, name: 'Node.js', level: 'Beginner' }
+    ];
+  });
 
-  // Handlers untuk Skill Dinamis
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'saving' | 'success' | 'error'>('saving');
+  const [errorMsg, setErrorMsg] = useState('');
+
   const addSkill = () => setSkills([...skills, { id: Date.now(), name: '', level: 'Beginner' }]);
   const removeSkill = (id: number) => setSkills(skills.filter(s => s.id !== id));
   const updateSkill = (id: number, field: string, value: string) => 
     setSkills(skills.map(s => s.id === id ? { ...s, [field]: value } : s));
 
-  // Handler Submit & Simpan ke Profile Database
   const handleSaveAndContinue = async () => {
     setIsSaving(true);
     setSaveStatus('saving');
     setErrorMsg('');
 
     try {
-      // 1. Parsing Single-line Text ke Array Object sesuai JSON Schema Backend
       let degree = 'S1';
       let major = 'Teknik Informatika';
       let institution = formData.education;
@@ -141,7 +141,6 @@ const VerifyDataPage = () => {
         extractedSkills: skills.map(s => s.name).filter(Boolean)
       };
 
-      // 2. Simpan ke database jika ada cvId
       if (cvId) {
         console.log(`Menyimpan review data CV dengan ID: ${cvId}...`);
         await cvService.reviewCv(cvId, reviewBody);
@@ -152,16 +151,16 @@ const VerifyDataPage = () => {
 
       setSaveStatus('success');
       
-      // Delay sebentar untuk feedback kesuksesan yang premium
       setTimeout(() => {
         setIsSaving(false);
         navigate('/assessment/profiling');
       }, 1500);
 
-    } catch (err: any) {
+    } catch (err) {
       console.error('Gagal menyimpan tinjauan profil:', err);
       setSaveStatus('error');
-      setErrorMsg(err.response?.data?.message || 'Gagal menyimpan profil belajar Anda. Silakan periksa koneksi Anda dan coba lagi.');
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      setErrorMsg(axiosError.response?.data?.message || 'Gagal menyimpan profil belajar Anda. Silakan periksa koneksi Anda dan coba lagi.');
     }
   };
 
@@ -170,9 +169,8 @@ const VerifyDataPage = () => {
       <Navbar minimal />
 
       <main className="flex-grow py-8 md:py-12 px-4 md:px-8">
-        <div className="max-w-[1200px] mx-auto">
+        <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto transition-all">
           
-          {/* Header Judul */}
           <div className="mb-10 text-center lg:text-left flex flex-col lg:flex-row items-center justify-between gap-4">
             <div>
               <h1 className="text-[#1E3A5F] text-[28px] md:text-[32px] font-extrabold tracking-tight">Verifikasi & Lengkapi Profil</h1>
@@ -188,10 +186,8 @@ const VerifyDataPage = () => {
             )}
           </div>
 
-          {/* Main Grid Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* SISI KIRI: CV Preview Placeholder (Responsive & Stable) */}
             <div className="lg:col-span-4 lg:sticky lg:top-24 z-0">
               <div className="bg-[#E0E7FF]/40 border-2 border-dashed border-[#3B82F6]/20 rounded-[20px] min-h-[300px] lg:h-[580px] flex flex-col items-center justify-center p-8 text-center transition-all bg-white/35">
                 <div className="space-y-6">
@@ -218,10 +214,8 @@ const VerifyDataPage = () => {
               </div>
             </div>
 
-            {/* SISI KANAN: Form Input (Scrollable) */}
             <div className="lg:col-span-8 space-y-8 pb-12">
               
-              {/* Card 1: Data Personal & Pendidikan */}
               <div className="bg-white rounded-[20px] shadow-[0_4px_24px_rgba(0,0,0,0.02)] p-6 md:p-10 space-y-6 border border-slate-200/60">
                 <h3 className="text-[#1E3A5F] font-black text-[17px] flex items-center gap-2 border-b border-slate-50 pb-3 uppercase tracking-wider">
                   <User size={18} className="text-[#3B82F6]" /> Data Personal & Pendidikan
@@ -276,7 +270,6 @@ const VerifyDataPage = () => {
                 </div>
               </div>
 
-              {/* Card 2: Skills Section */}
               <div className="bg-white rounded-[20px] shadow-[0_4px_24px_rgba(0,0,0,0.02)] p-6 md:p-10 border border-slate-200/60">
                 <div className="flex justify-between items-center mb-6 border-b border-slate-50 pb-3">
                   <h3 className="text-[#1E3A5F] font-black text-[17px] flex items-center gap-2 uppercase tracking-wider">
@@ -307,7 +300,6 @@ const VerifyDataPage = () => {
                 </div>
               </div>
 
-              {/* Error Message if Save Fails */}
               {saveStatus === 'error' && (
                 <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3">
                   <span className="text-red-500 font-bold shrink-0 mt-0.5">⚠️</span>
@@ -318,7 +310,6 @@ const VerifyDataPage = () => {
                 </div>
               )}
 
-              {/* Navigation Buttons (Responsive Footer) */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
                 <button 
                   onClick={() => navigate(-1)}
@@ -347,7 +338,6 @@ const VerifyDataPage = () => {
         </div>
       </main>
 
-      {/* PREMIUM SAVING FEEDBACK SCREEN (GLASSMORPHISM) */}
       {isSaving && saveStatus !== 'error' && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div className="bg-white rounded-[24px] max-w-[400px] w-full p-8 md:p-10 text-center shadow-2xl border border-white flex flex-col items-center">
@@ -373,6 +363,7 @@ const VerifyDataPage = () => {
         </div>
       )}
 
+      <input type="file" ref={fileInputRef} accept=".pdf" className="hidden" />
       <Footer />
     </div>
   );

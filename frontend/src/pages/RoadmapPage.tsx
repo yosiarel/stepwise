@@ -13,9 +13,9 @@ import {
   AlertCircle
 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout'; 
-import roadmapService from '../services/roadmapService'; //
+import roadmapService from '../services/roadmapService'; 
 import careerService from '../services/careerService'; 
-import type { RoadmapMaterial, RoadmapResponse } from '../types/roadmap'; //
+import type { RoadmapMaterial, RoadmapResponse } from '../types/roadmap'; 
 
 interface SubMaterial {
   id: string;
@@ -129,7 +129,7 @@ const RoadmapPage = () => {
       const selectedCareer = await careerService.getSelectedCareer();
 
       try {
-        const data = await roadmapService.getActiveRoadmap(); //
+        const data = await roadmapService.getActiveRoadmap(); 
         
         if (data.professionTitle !== selectedCareer.professionTitle) {
           await handleGenerateRoadmap();
@@ -166,7 +166,7 @@ const RoadmapPage = () => {
         setErrorState('other');
         setErrorMessage(error.response?.data?.message || 'Terjadi kesalahan saat memuat data belajar Anda.');
       }
-    } finally { // PERBAIKAN SINTAKS TYPO
+    } finally {
       setIsLoading(false);
     }
   };
@@ -176,7 +176,7 @@ const RoadmapPage = () => {
     setErrorState('none');
     
     try {
-      await roadmapService.generateRoadmap(); //
+      await roadmapService.generateRoadmap(); 
       await fetchActiveRoadmap(false);
     } catch (err: unknown) {
       console.error('Gagal mengenerate roadmap:', err);
@@ -188,7 +188,7 @@ const RoadmapPage = () => {
         setErrorState('other');
         setErrorMessage(error.response?.data?.message || 'AI Advisor gagal menyusun roadmap Anda. Silakan coba lagi.');
       }
-    } finally { // PERBAIKAN SINTAKS TYPO
+    } finally { 
       setIsGenerating(false);
     }
   };
@@ -217,12 +217,12 @@ const RoadmapPage = () => {
 
     setActionLoadingId(matId);
     try {
-      await roadmapService.completeMaterial(matId); //
+      await roadmapService.completeMaterial(matId); 
       await fetchActiveRoadmap(false);
     } catch (err) {
       console.error('Gagal menyelesaikan materi:', err);
       alert('Gagal memperbarui status materi. Silakan coba lagi.');
-    } finally { // PERBAIKAN SINTAKS TYPO
+    } finally { 
       setActionLoadingId(null);
     }
   };
@@ -231,7 +231,6 @@ const RoadmapPage = () => {
     <DashboardLayout>
       <div className="w-full transition-all flex flex-col relative pb-6">
 
-        {/* LOADING STATE */}
         {isLoading && !isGenerating && (
           <div className="bg-white border border-slate-200/60 rounded-[20px] p-12 xl:p-16 shadow-sm flex flex-col items-center justify-center text-center">
             <Loader2 className="animate-spin text-[#1E3A5F] mb-3" size={40} />
@@ -240,7 +239,6 @@ const RoadmapPage = () => {
           </div>
         )}
 
-        {/* GENERATING STATE AI */}
         {isGenerating && (
           <div className="bg-white border border-[#3B82F6]/30 rounded-[20px] p-10 xl:p-16 shadow-lg flex flex-col items-center justify-center text-center relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-[#1E3A5F] animate-pulse"></div>
@@ -259,7 +257,6 @@ const RoadmapPage = () => {
           </div>
         )}
 
-        {/* ERROR NO CAREER */}
         {errorState === 'no_career' && !isLoading && !isGenerating && (
           <div className="bg-white border border-slate-200/60 rounded-[20px] p-10 text-center max-w-[600px] mx-auto">
             <div className="w-14 h-14 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-4 border border-amber-200 mx-auto">
@@ -278,7 +275,6 @@ const RoadmapPage = () => {
           </div>
         )}
 
-        {/* ERROR GENERAL */}
         {errorState === 'other' && !isLoading && !isGenerating && (
           <div className="bg-white border border-slate-200/60 rounded-[20px] p-10 text-center max-w-[500px] mx-auto">
             <div className="w-14 h-14 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-4 border border-rose-200 mx-auto">
@@ -295,10 +291,8 @@ const RoadmapPage = () => {
           </div>
         )}
 
-        {/* SUCCESS ROADMAP DISPLAY CONTAINER */}
         {roadmap && !isLoading && !isGenerating && errorState === 'none' && (
           <>
-            {/* HEAD BANNER BAR */}
             <div className="bg-white border border-slate-200/60 rounded-[20px] p-4 md:p-5 xl:p-6 shadow-sm mb-6 space-y-4 md:space-y-5 transition-all">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                 <div>
@@ -327,7 +321,6 @@ const RoadmapPage = () => {
                 </div>
               </div>
 
-              {/* PROGRESS ROW */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center text-[12px] md:text-[13px] font-bold">
                   <span className="text-[#1E3A5F] uppercase tracking-wider">Total Progress Kurikulum</span>
@@ -342,7 +335,6 @@ const RoadmapPage = () => {
               </div>
             </div>
 
-            {/* TIMELINE SECTION CONTAINER */}
             <div className="relative border-l-2 border-slate-200 pl-4 md:pl-5 xl:pl-6 ml-3 md:ml-4 space-y-4 my-5 md:my-6">
               {weeklyNodes.map((node) => {
                 const isExpanded = !!expandedWeeks[node.weekNumber];
@@ -357,7 +349,6 @@ const RoadmapPage = () => {
                     className={`relative transition-all duration-300 ${node.status === 'locked' ? 'opacity-50' : 'opacity-100'}`}
                   >
                     
-                    {/* NODE BULLET ON TIMELINE */}
                     <div className={`absolute -left-[29px] md:-left-[32px] xl:-left-[35px] top-3.5 w-4 h-4 md:w-5 md:h-5 xl:w-6 xl:h-6 rounded-full flex items-center justify-center border-2 z-10 transition-all ${
                       node.status === 'completed' ? 'bg-[#10B981] border-[#10B981] text-white' :
                       node.status === 'active' ? 'bg-white border-[#3B82F6] text-[#3B82F6] scale-110 shadow-sm' :
@@ -368,7 +359,6 @@ const RoadmapPage = () => {
                        <div className="w-1.5 h-1.5 rounded-full bg-current" />}
                     </div>
 
-                    {/* WEEK CARD ACCORDION ROW */}
                     <div 
                       className={`bg-white border rounded-2xl p-4 md:p-5 transition-all shadow-sm ${
                         node.status === 'active' ? 'border-[#3B82F6] shadow-sm shadow-blue-50/50' : 'border-slate-200/70 hover:border-slate-300'
@@ -406,7 +396,6 @@ const RoadmapPage = () => {
                         </div>
                       </div>
 
-                      {/* CONDITIONAL MATERIAL SUB-ACCORDION */}
                       {isExpanded && node.status !== 'locked' && (
                         <div className="mt-4 pt-4 border-t border-slate-100 space-y-3 animate-fadeIn">
                           

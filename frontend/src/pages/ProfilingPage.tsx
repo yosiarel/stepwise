@@ -8,7 +8,6 @@ import {
   Target, 
   Edit3, 
   Plus, 
-  Trash2, 
   Check, 
   X, 
   Loader2 
@@ -16,9 +15,6 @@ import {
 import DashboardLayout from '../components/DashboardLayout';
 import profileService from '../services/profileService';
 
-// ==========================================
-// KONTRAK STRUKTUR DATA (TYPESCRIPT STRICT)
-// ==========================================
 interface EducationItem {
   id: string;
   jenjang: 'SMA' | 'SMK' | 'D3' | 'D4' | 'S1' | 'S2' | 'S3' | 'Profesi';
@@ -45,13 +41,9 @@ interface SkillItem {
 }
 
 const ProfilePage = () => {
-  // State Kontrol Transisi Tampilan UI
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // ==========================================
-  // MASTER STATES (DATA REAL DARI BACKEND)
-  // ==========================================
   const [dataDiri, setDataDiri] = useState({
     namaLengkap: '',
     email: '',
@@ -96,14 +88,10 @@ const ProfilePage = () => {
     kesiapanKerja: 0
   });
 
-  // ==========================================
-  // BUFFER STATES (TEMPAT MENGETIK SEMENTARA)
-  // ==========================================
   const [bufferDataDiri, setBufferDataDiri] = useState({ ...dataDiri });
   const [bufferStatusKerja, setBufferStatusKerja] = useState({ ...statusKerja });
   const [bufferPreferensi, setBufferPreferensi] = useState({ ...preferensi });
 
-  // FUNGSI UTAMA: Memuat Struktur Profil dari API Server
   const loadProfileFromBackend = async () => {
     try {
       const serverData = await profileService.getProfile();
@@ -180,9 +168,6 @@ const ProfilePage = () => {
     return isNaN(usia) ? 0 : usia;
   };
 
-  // ==========================================
-  // HANDLERS KENDALI PEMBATALAN (CANCEL SAFE)
-  // ==========================================
   const handleStartEditDataDiri = () => {
     setBufferDataDiri({ ...dataDiri });
     setIsEditDataDiri(true);
@@ -298,10 +283,8 @@ const ProfilePage = () => {
 
   return (
     <DashboardLayout>
-      {/* RESPONSIVE LAYOUT CONTAINER MATCH (Dinamis Sesuai DashboardPage Anda) */}
       <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto font-sans text-[#1F2937] px-4 md:px-0 pb-12 transition-all relative space-y-6">
         
-        {/* HEADER AREA */}
         <div>
           <h1 className="text-[28px] font-bold leading-[36px] text-[#1F2937] tracking-tight mb-1 flex items-center gap-3">
             <User className="text-[#3B82F6]" size={26} /> Profil Pengguna
@@ -311,7 +294,6 @@ const ProfilePage = () => {
           </p>
         </div>
 
-        {/* REVISI TOTAL SEKSI 1: DATA DIRI (MURNI DATA TEKS GRID TANPA LUARAN FLEX / TANPA IKON-IKON FOTO/AVATAR DEKORATIF) */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3 mb-4">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -348,7 +330,6 @@ const ProfilePage = () => {
           )}
         </div>
 
-        {/* SEKSI 2: STATUS & PEKERJAAN */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3 mb-4">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -403,7 +384,6 @@ const ProfilePage = () => {
           )}
         </div>
 
-        {/* PENDIDIKAN SECTION */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] space-y-4">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -434,7 +414,6 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* PENGALAMAN KERJA SECTION */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] space-y-4">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -465,7 +444,6 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* KEAHLIAN SECTION */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] space-y-4">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -477,9 +455,46 @@ const ProfilePage = () => {
           </div>
 
           {isAddingSkill && (
-            <form onSubmit={handleTambahSkillSubmit} className="p-4 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] space-y-3">
-              <input type="text" placeholder="Ketik nama skill baru..." value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} className="w-full h-[44px] px-3 bg-white border border-[#D1D5DB] rounded-[8px]" />
-              <button type="submit" className="h-[36px] px-4 bg-[#10B981] text-white text-[14px] font-medium rounded-[8px] cursor-pointer">Simpan Keahlian</button>
+            <form onSubmit={handleTambahSkillSubmit} className="p-4 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] space-y-3 animate-fadeIn">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[13px] font-medium text-[#1F2937]">Nama Keahlian</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ketik nama skill..." 
+                    value={newSkillName} 
+                    onChange={(e) => setNewSkillName(e.target.value)} 
+                    className="w-full h-[40px] px-3 bg-white border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none focus:border-[#3B82F6]" 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[13px] font-medium text-[#1F2937]">Kategori</label>
+                  <select 
+                    value={newSkillKategori} 
+                    onChange={(e) => setNewSkillKategori(e.target.value as 'teknis' | 'non-teknis')} 
+                    className="w-full h-[40px] px-3 bg-white border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none"
+                  >
+                    <option value="teknis">Teknis</option>
+                    <option value="non-teknis">Non-Teknis</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[13px] font-medium text-[#1F2937]">Tingkat Kemahiran</label>
+                  <select 
+                    value={newSkillLevel} 
+                    onChange={(e) => setNewSkillLevel(e.target.value as 'Beginner' | 'Intermediate' | 'Advanced')} 
+                    className="w-full h-[40px] px-3 bg-white border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none"
+                  >
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button type="button" onClick={() => setIsAddingSkill(false)} className="h-[36px] px-4 border border-[#D1D5DB] hover:bg-white text-[13px] font-medium rounded-[8px]">Batal</button>
+                <button type="submit" className="h-[36px] px-4 bg-[#10B981] text-white text-[14px] font-medium rounded-[8px] cursor-pointer hover:bg-[#059669]">Simpan Keahlian</button>
+              </div>
             </form>
           )}
 
@@ -496,7 +511,6 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* PREFERENSI BELAJAR & KARIER SECTION */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3 mb-4">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -543,13 +557,12 @@ const ProfilePage = () => {
               <div className="bg-[#F3F4F6] p-3 rounded-[8px]"><span className="text-[#6B7280] block text-[12px] uppercase">Gaya Belajar</span><span className="font-medium text-[#1F2937]">{preferensi.gayaBelajar}</span></div>
               <div className="bg-[#F3F4F6] p-3 rounded-[8px]"><span className="text-[#6B7280] block text-[12px] uppercase">Lingkungan</span><span className="font-medium text-[#1F2937]">{preferensi.lingkunganKerja}</span></div>
               <div className="bg-[#F3F4F6] p-3 rounded-[8px]"><span className="text-[#6B7280] block text-[12px] uppercase">Tipe Korporasi</span><span className="font-medium text-[#1F2937]">{preferensi.tipePerusahaan}</span></div>
-              <div className="bg-[#F3F4F6] p-3 rounded-[8px]"><span className="text-[#6B7280] block text-[#12px] uppercase">Komitmen Waktu</span><span className="font-medium text-[#1F2937]">{preferensi.komitmenWaktu} Jam / Minggu</span></div>
+              <div className="bg-[#F3F4F6] p-3 rounded-[8px]"><span className="text-[#6B7280] block text-[12px] uppercase">Komitmen Waktu</span><span className="font-medium text-[#1F2937]">{preferensi.komitmenWaktu} Jam / Minggu</span></div>
               <div className="bg-[#F3F4F6] p-3 rounded-[8px]"><span className="text-[#6B7280] block text-[12px] uppercase">Range Pendapatan</span><span className="font-medium text-[#1F2937]">{preferensi.pendapatanRange || 'Opsional'}</span></div>
             </div>
           )}
         </div>
 
-        {/* TARGET KARIER SECTION */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] space-y-4">
           <div className="border-b border-[#E5E7EB] pb-3">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -589,7 +602,6 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* TOAST PANEL */}
         {toastMessage && (
           <div className="fixed top-6 right-6 bg-[#1F2937] text-white px-4 py-3 rounded-[8px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] font-medium text-[14px] leading-[20px] animate-slideInRight z-50 flex items-center gap-2 border border-[#E5E7EB]/10 max-w-[80vw]">
             <Check size={16} strokeWidth={3} className="shrink-0 text-[#10B981]" /> 

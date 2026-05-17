@@ -38,13 +38,10 @@ const LandingPage = () => {
       <Navbar />
       
       <main className="flex-grow">
-        {/* 1. HERO SECTION */}
         <section className="relative bg-gradient-to-br from-[#1E3A5F] to-[#152A44] py-16 md:py-24 lg:py-28 xl:py-36 2xl:py-44 overflow-hidden">
-          {/* RESPONSIVE ENHANCEMENT: Menggunakan arsitektur kontainer adaptif bertingkat seperti DashboardPage */}
           <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 transition-all relative z-10 text-white">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16 xl:gap-24 items-center">
               <div className="text-center md:text-left space-y-6">
-                {/* Font size membesar secara fluid mengikuti bentangan monitor lebar */}
                 <h1 className="text-[32px] md:text-[44px] lg:text-[48px] xl:text-[56px] 2xl:text-[64px] font-bold leading-tight tracking-tight">
                   Navigasi Karier IT Kamu Dimulai di Sini
                 </h1>
@@ -74,7 +71,6 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* 2. TENTANG STEPWISE */}
         <section className="py-20 lg:py-28 xl:py-36 bg-white">
           <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 transition-all">
             <div className="flex flex-col md:flex-row items-center gap-12 lg:gap-16 xl:gap-24 justify-between">
@@ -103,7 +99,6 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* 3. FITUR UTAMA */}
         <section id="fitur" className="py-20 lg:py-28 xl:py-36 bg-[#EFF4FF]">
           <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 transition-all text-center">
             <h2 className="text-[#1E3A5F] text-[28px] md:text-[32px] xl:text-[38px] 2xl:text-[44px] font-bold mb-16 tracking-tight">
@@ -123,7 +118,6 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* 4. CARA KERJA STEPWISE */}
         <section id="cara-kerja" className="py-20 bg-white">
           <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 transition-all text-center">
             <h2 className="text-[#1E3A5F] text-[28px] md:text-[32px] xl:text-[38px] 2xl:text-[44px] font-bold mb-16 tracking-tight">
@@ -143,7 +137,6 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* 5. MENGAPA MEMILIH STEPWISE */}
         <section className="py-20 bg-white border-t border-[#E5E7EB]/60">
           <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 transition-all">
             <h2 className="text-center text-[#1E3A5F] text-[28px] md:text-[32px] xl:text-[38px] 2xl:text-[44px] font-bold mb-16 tracking-tight">
@@ -174,7 +167,6 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* 6. CTA SECTION */}
         <section className="py-20 lg:py-28 bg-[#1E3A5F]">
           <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 transition-all text-center text-white space-y-8">
             <h2 className="text-[28px] md:text-[36px] xl:text-[42px] 2xl:text-[48px] font-bold tracking-tight">
@@ -191,7 +183,6 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* 7. FAQ */}
         <section className="py-20 bg-[#F9FAFB]">
           <div className="w-full max-w-[800px] mx-auto px-4 sm:px-6 transition-all">
             <h2 className="text-center text-[#1E3A5F] text-[28px] md:text-[32px] xl:text-[38px] 2xl:text-[44px] font-bold mb-12 tracking-tight">

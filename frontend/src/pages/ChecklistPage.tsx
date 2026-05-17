@@ -38,7 +38,6 @@ interface WeekData {
 const ChecklistPage = () => {
   const navigate = useNavigate();
 
-  // State Manajemen Data Backend
   const [weeks, setWeeks] = useState<WeekData[]>([]);
   const [currentWeekNum, setCurrentWeekNum] = useState<number>(1);
   const [professionTitle, setProfessionTitle] = useState<string>('');
@@ -46,15 +45,12 @@ const ChecklistPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Fungsi mentransformasikan list flat dari backend ke format mingguan lokal
   const transformMaterialsToWeeks = (materials: BackendMaterial[]): WeekData[] => {
     if (!materials || materials.length === 0) return [];
 
-    // Urutkan berdasarkan urutan pembelajaran asli
     const sorted = [...materials].sort((a, b) => a.order - b.order);
     const minTime = new Date(sorted[0].scheduledAt).getTime();
 
-    // Kelompokkan ke dalam interval 7 hari berdasarkan scheduledAt
     const grouped: { [key: number]: BackendMaterial[] } = {};
     sorted.forEach(m => {
       const mTime = new Date(m.scheduledAt).getTime();
@@ -67,7 +63,6 @@ const ChecklistPage = () => {
       grouped[weekNum].push(m);
     });
 
-    // Petakan ke format WeekData yang siap dikonsumsi UI
     return Object.keys(grouped)
       .map(Number)
       .sort((a, b) => a - b)
@@ -76,7 +71,6 @@ const ChecklistPage = () => {
         const firstTask = tasksInWeek[0];
         const phaseLabel = firstTask.phase;
 
-        // Racik topik dan deskripsi dinamis dari materi teratas minggu ini
         const cleanTopic = firstTask.title.split(' untuk ')[0] || firstTask.title;
         const topic = `${phaseLabel}: ${cleanTopic}`;
         const description = firstTask.description || `Fase ${phaseLabel} untuk mendalami kompetensi utama dan keterampilan spesifik yang relevan dengan standar industri kerja.`;
@@ -105,7 +99,6 @@ const ChecklistPage = () => {
       });
   };
 
-  // PENGAMBILAN DATA DARI BACKEND
   useEffect(() => {
     const fetchActiveRoadmap = async () => {
       try {
@@ -123,7 +116,6 @@ const ChecklistPage = () => {
         }
       } catch (err) {
         console.error('Error fetching checklist roadmap:', err);
-        // SOLUSI ESLINT: Lakukan type assertion ke bentuk struktur response Axios tanpa menggunakan kata 'any'
         const axiosError = err as { response?: { data?: { message?: string } } };
         setError(axiosError.response?.data?.message || 'Belum ada kurikulum roadmap yang aktif. Silakan pilih target karier terlebih dahulu.');
       } finally {
@@ -134,7 +126,6 @@ const ChecklistPage = () => {
     fetchActiveRoadmap();
   }, []);
 
-  // Selektor navigasi minggu berdasarkan index array
   const currentWeekIndex = useMemo(() => {
     return weeks.findIndex(w => w.weekNumber === currentWeekNum);
   }, [weeks, currentWeekNum]);
@@ -145,7 +136,6 @@ const ChecklistPage = () => {
 
   const currentWeekData = weeks[currentWeekIndex] || null;
 
-  // Menghitung Progress Mingguan secara reaktif
   const { totalTasks, completedTasks, progressPercentage } = useMemo(() => {
     if (!currentWeekData) return { totalTasks: 0, completedTasks: 0, progressPercentage: 0 };
     const total = currentWeekData.tasks.length;
@@ -154,7 +144,6 @@ const ChecklistPage = () => {
     return { totalTasks: total, completedTasks: completed, progressPercentage: percentage };
   }, [currentWeekData]);
 
-  // HANDLER: Klik / Centang Tugas terintegrasi API PATCH
   const handleToggleTask = async (taskId: string) => {
     if (!currentWeekData) return;
 
@@ -184,7 +173,6 @@ const ChecklistPage = () => {
       setTimeout(() => setToastMessage(null), 4000);
     } catch (err) {
       console.error('Gagal memperbarui progres:', err);
-      // SOLUSI ESLINT: Lakukan type assertion ke bentuk struktur response Axios tanpa menggunakan kata 'any'
       const axiosError = err as { response?: { data?: { message?: string } } };
       alert(axiosError.response?.data?.message || 'Gagal menandai materi sebagai selesai. Coba lagi nanti.');
     }
@@ -246,7 +234,6 @@ const ChecklistPage = () => {
     <DashboardLayout>
       <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto transition-all relative">
         
-        {/* ACTION BAR ATAS */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 xl:mb-8">
           <button 
             onClick={() => navigate('/dashboard/roadmap')}
@@ -255,7 +242,6 @@ const ChecklistPage = () => {
             <ArrowLeft size={18} /> Kembali ke Roadmap ({professionTitle})
           </button>
 
-          {/* Navigasi Minggu */}
           <div className="flex items-center gap-3 bg-white p-1.5 rounded-xl border border-slate-200/80 shadow-sm w-fit">
             <button 
               onClick={handlePrevWeek}
@@ -278,7 +264,6 @@ const ChecklistPage = () => {
           </div>
         </div>
 
-        {/* HEADER JUDUL & DESKRIPSI */}
         <div className="mb-8 xl:mb-10">
           <h1 className="text-[24px] md:text-[28px] xl:text-[32px] font-black text-[#1E3A5F] tracking-tight mb-2 md:mb-3">
             Minggu {currentWeekData.weekNumber}: {currentWeekData.topic}
@@ -288,7 +273,6 @@ const ChecklistPage = () => {
           </p>
         </div>
 
-        {/* KARTU PROGRES MINGGU INI */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 md:p-6 xl:p-8 mb-6 xl:mb-8 transition-all">
           <h3 className="text-[#1E3A5F] text-[16px] xl:text-[18px] font-extrabold mb-4">Progres Minggu Ini</h3>
           
@@ -312,7 +296,6 @@ const ChecklistPage = () => {
           </div>
         </div>
 
-        {/* KARTU DAFTAR MATERI PEMBELAJARAN */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all">
           <div className="p-5 md:p-6 xl:p-8 border-b border-slate-100 bg-slate-50/50">
             <h3 className="text-[#1E3A5F] text-[16px] xl:text-[18px] font-extrabold">Materi Pembelajaran</h3>
@@ -366,7 +349,6 @@ const ChecklistPage = () => {
           </div>
         </div>
 
-        {/* TOAST CONFIRMATION */}
         {toastMessage && (
           <div className="fixed bottom-6 right-6 bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-xl font-bold text-[13px] tracking-wide animate-slideInRight z-50 flex items-center gap-2 border border-emerald-500 max-w-[80vw]">
             <Check size={16} strokeWidth={3} className="shrink-0" /> 

@@ -7,131 +7,16 @@ import OptionCard from '../components/assessment/OptionCard';
 import { useAssessmentStore } from '../store/useAssessmentStore';
 import assessmentService from '../services/assessmentService';
 
-const Phase3Page = () => {
+const Phase2BPage = () => {
   const navigate = useNavigate();
   const { sessionId, currentQuestion, setCurrentQuestion } = useAssessmentStore();
   
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Dataset Pertanyaan Fase 3 (Lengkap 3-1 sampai 3-4)
-  const questions = [
-    {
-      id: '3-1',
-      question: "Bagaimana kamu paling nyaman mempelajari hal baru?",
-      instruction: "Pilih satu",
-      maxSelect: 1,
-      options: [
-        { 
-          id: 'A', 
-          label: 'Visual', 
-          desc: 'Paling mudah paham dengan menonton video, melihat diagram, atau membaca infografis.' 
-        },
-        { 
-          id: 'B', 
-          label: 'Auditori', 
-          desc: 'Paling mudah paham dengan mendengarkan penjelasan, podcast, atau diskusi verbal.' 
-        },
-        { 
-          id: 'C', 
-          label: 'Praktik Langsung', 
-          desc: 'Paling mudah paham dengan langsung mencoba sendiri dan belajar dari kesalahan.' 
-        },
-        { 
-          id: 'D', 
-          label: 'Membaca & Menulis', 
-          desc: 'Paling mudah paham dengan membaca dokumentasi, artikel panjang, and membuat catatan.' 
-        }
-      ]
-    },
-    {
-      id: '3-2',
-      question: "Lingkungan kerja seperti apa yang paling membuatmu nyaman?",
-      instruction: "Pilih satu",
-      maxSelect: 1,
-      options: [
-        { 
-          id: 'A', 
-          label: 'Bekerja sendiri dengan fokus penuh', 
-          desc: 'Paling produktif saat bisa fokus tanpa gangguan.' 
-        },
-        { 
-          id: 'B', 
-          label: 'Bekerja dalam tim kecil yang erat (2–5 orang)', 
-          desc: 'Suka kolaborasi intens dengan tim kecil.' 
-        },
-        { 
-          id: 'C', 
-          label: 'Bekerja dalam tim besar dengan struktur jelas', 
-          desc: 'Nyaman dengan peran yang terdefinisi baik.' 
-        },
-        { 
-          id: 'D', 
-          label: 'Fleksibel — kadang sendiri, kadang tim', 
-          desc: 'Bisa menyesuaikan di berbagai situasi.' 
-        }
-      ]
-    },
-    {
-      id: '3-3',
-      question: "Tipe perusahaan seperti apa yang paling kamu idamkan?",
-      instruction: "Pilih satu",
-      maxSelect: 1,
-      options: [
-        { 
-          id: 'A', 
-          label: 'Startup', 
-          desc: 'Perusahaan rintisan yang fokus on inovasi baru, pertumbuhan sangat cepat, and peran ganda dalam tim kecil yang dinamis.' 
-        },
-        { 
-          id: 'B', 
-          label: 'Korporat / Perusahaan Mapan', 
-          desc: 'Perusahaan non-IT skala besar dengan struktur formal, jenjang karier yang pasti, dan stabilitas tinggi.' 
-        },
-        { 
-          id: 'C', 
-          label: 'Freelance / Mandiri', 
-          desc: 'Bekerja secara independen, mengelola klien sendiri, dan memiliki kendali penuh atas waktu kerja.' 
-        },
-        { 
-          id: 'D', 
-          label: 'Tech Company / Digital Agency', 
-          desc: 'Perusahaan teknologi yang sudah mapan dengan sistem kerja teratur, menangani produk skala global atau proyek klien secara profesional.' 
-        },
-        { 
-          id: 'E', 
-          label: 'Belum terpikirkan', 
-          desc: 'Masih mengeksplorasi berbagai kemungkinan dan belum memiliki preferensi khusus.' 
-        }
-      ]
-    },
-    {
-      id: '3-4',
-      question: "Berapa jam per minggu yang secara realistis bisa kamu sisihkan untuk belajar sekarang?",
-      instruction: "Pilih satu yang paling mendekati",
-      maxSelect: 1,
-      options: [
-        { 
-          id: 'A', 
-          label: 'Kurang dari 5 jam', 
-          desc: 'Cocok untuk pembelajaran santai di sela kesibukan yang padat.' 
-        },
-        { 
-          id: 'B', 
-          label: '5–10 jam', 
-          desc: 'Komitmen waktu yang cukup untuk progres yang stabil setiap minggunya.' 
-        },
-        { 
-          id: 'C', 
-          label: '10–20 jam', 
-          desc: 'Sangat baik untuk kamu yang ingin akselerasi pemahaman lebih cepat.' 
-        },
-        { 
-          id: 'D', 
-          label: 'Lebih dari 20 jam', 
-          desc: 'Fokus penuh (intensive) untuk mendalami bidang baru dalam waktu singkat.' 
-        }
-      ]
+  useEffect(() => {
+    if (!sessionId) {
+      navigate('/assessment/profiling');
     }
   }, [sessionId, navigate]);
 
@@ -176,13 +61,12 @@ const Phase3Page = () => {
         setSelectedOptions([]);
         window.scrollTo(0, 0);
         
-        // Tetap di Phase 3 selama key masih FASE3
-        if (!response.nextQuestion.key.startsWith('FASE3')) {
-          // Jika pindah fase lain (misal ada fase 4 di masa depan)
-          navigate('/assessment/question'); 
+        if (response.nextQuestion.key.startsWith('FASE3')) {
+          navigate('/assessment/phase-3');
+        } else if (response.nextQuestion.key.startsWith('FASE2A')) {
+          navigate('/assessment/phase-2-a');
         }
       } else {
-        // Selesai semua pertanyaan
         navigate('/assessment/analysis');
       }
     } catch (error) {
@@ -193,25 +77,31 @@ const Phase3Page = () => {
     }
   };
 
+  const getPhaseLabel = () => {
+    if (currentQuestion.key.startsWith('FASE2')) return 'Fase 2: Pemetaan Kompetensi';
+    if (currentQuestion.key.startsWith('FASE3')) return 'Fase 3: Gaya & Preferensi';
+    return 'Asesmen';
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FF] font-sans flex flex-col antialiased">
       <Navbar minimal />
 
-      {/* PERBAIKAN TAKTIS: Menambahkan flex items-center justify-center agar posisi vertikal konsisten presisi di tengah */}
       <main className="flex-grow py-6 md:py-8 px-4 flex items-center justify-center">
-        
-        {/* REVISI TAKTIS: Mengubah max-w-[960px] menjadi w-full dengan kombinasi xl & 2xl agar grid opsi memuai proporsional di monitor desktop lebar */}
-        <div className="w-full max-w-[960px] xl:max-w-[1140px] 2xl:max-w-[1240px] mx-auto transition-all">
+        <div className="w-full max-w-[1000px] xl:max-w-[1140px] 2xl:max-w-[1240px] mx-auto transition-all">
           
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[#6B7280] hover:text-[#1E3A5F] font-bold text-[13px] mb-4 transition-colors">
             <ChevronLeft size={18} /> Kembali
           </button>
 
-          <ProgressBar phase="Fase 3: Gaya & Preferensi" percentage={85} />
+          <ProgressBar 
+            phase={getPhaseLabel()} 
+            percentage={currentQuestion.key.startsWith('FASE3') ? 70 : 45} 
+          />
 
           <div className="text-center mb-6">
             <h2 className="text-[#1E3A5F] text-[22px] md:text-[26px] font-bold leading-tight mb-4 max-w-[750px] xl:max-w-[900px] mx-auto">
-              {currentData.question}
+              {currentQuestion.text}
             </h2>
             
             <div className="flex justify-center">
@@ -221,16 +111,18 @@ const Phase3Page = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {currentQuestion.options.map((opt) => (
-              <OptionCard 
-                key={opt.id}
-                label={opt.label}
-                description={''}
-                isSelected={selectedOptions.includes(opt.value)}
-                onSelect={() => handleSelect(opt.value)}
-              />
-            ))}
+          <div className="mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-[960px] xl:max-w-none mx-auto">
+              {currentQuestion.options.map((opt) => (
+                <OptionCard 
+                  key={opt.id}
+                  label={opt.label}
+                  description={opt.value}
+                  isSelected={selectedOptions.includes(opt.value)}
+                  onSelect={() => handleSelect(opt.value)}
+                />
+              ))}
+            </div>
           </div>
 
           <div className="flex justify-center border-t border-[#D1D5DB]/50 pt-6">
@@ -249,16 +141,15 @@ const Phase3Page = () => {
                 </>
               ) : (
                 <>
-                  {currentQuestion.key === 'FASE3_5' ? 'Selesaikan Asesmen' : 'Lanjutkan'} <ArrowRight size={18} />
+                  Lanjutkan <ArrowRight size={18} />
                 </>
               )}
             </button>
           </div>
         </div>
       </main>
-
     </div>
   );
 };
 
-export default Phase3Page;
+export default Phase2BPage;

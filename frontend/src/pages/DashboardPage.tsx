@@ -12,6 +12,7 @@ import {
   PlayCircle
 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface WeeklyTask {
   id: string;
@@ -22,20 +23,17 @@ interface WeeklyTask {
 }
 
 const DashboardPage = () => {
-  const navigate = useNav();
-  const { user, logout: authLogout } = useAuthStore();
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
 
-  // State Kesiapan Kerja & Statistik Belajar (Dinamis)
   const [readiness, setReadiness] = useState<number>(45); 
   const [materiSelasai, setMateriSelesai] = useState<number>(12); 
   const totalMateri = 28; 
   const totalJamBelajar = 34; 
   const streakDays = 5; 
 
-  // State Banner Evaluasi Berkala
   const [showEvalBanner, setShowEvalBanner] = useState<boolean>(true);
 
-  // State Daftar Tugas Mingguan (Interaktif)
   const [tasks, setTasks] = useState<WeeklyTask[]>([
     { id: 'task-1', title: 'Learn CSS Flexbox Layouting', duration: 'Est. 2 Jam', completed: false, impactValue: 2 },
     { id: 'task-2', title: 'Master Grid Layout & Responsive Design', duration: 'Est. 3 Jam', completed: false, impactValue: 3 },
@@ -65,7 +63,6 @@ const DashboardPage = () => {
 
   return (
     <DashboardLayout>
-      {/* Target Karier */}
       <div className="bg-white border border-slate-200/60 rounded-[20px] p-6 xl:p-8 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 transition-all">
         <div>
           <span className="text-slate-400 text-[11px] xl:text-[12px] font-extrabold uppercase tracking-widest block mb-1">Target Karier Saat Ini</span>
@@ -81,7 +78,6 @@ const DashboardPage = () => {
         </button>
       </div>
 
-      {/* Banner Evaluasi Berkala */}
       {showEvalBanner && (
         <div className="bg-gradient-to-r from-[#1E3A5F] to-[#152A44] text-white rounded-[16px] xl:rounded-[20px] p-4 md:p-5 xl:p-6 shadow-md mb-6 xl:mb-8 flex items-center justify-between gap-4 animate-fadeIn transition-all">
           <div className="flex items-center gap-3 xl:gap-5">
@@ -105,13 +101,10 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* Grid Utama Dasbor */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-8 items-start transition-all">
         
-        {/* Panel Kiri */}
         <div className="lg:col-span-8 space-y-6 xl:space-y-8">
           
-          {/* Status Kesiapan */}
           <div className="bg-white border border-slate-200/60 rounded-[20px] p-6 xl:p-8 shadow-sm space-y-4 xl:space-y-6 transition-all">
             <div className="flex justify-between items-end">
               <div>
@@ -145,7 +138,6 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Checklist Tugas */}
           <div className="bg-white border border-slate-200/60 rounded-[20px] p-6 xl:p-8 shadow-sm transition-all">
             <div className="mb-5 xl:mb-7">
               <h3 className="text-[#1E3A5F] text-[15px] xl:text-[17px] font-black uppercase tracking-wider">Yang Harus Diselesaikan Minggu Ini</h3>
@@ -188,7 +180,6 @@ const DashboardPage = () => {
 
         </div>
 
-        {/* Panel Kanan */}
         <div className="lg:col-span-4 space-y-6 xl:space-y-8">
           
           <div className="space-y-3 xl:space-y-4">
@@ -242,7 +233,7 @@ const DashboardPage = () => {
                   <span className="text-slate-500 text-[12.5px] xl:text-[14px] font-bold">Streak Harian</span>
                 </div>
                 <span className="text-rose-600 text-[13.5px] xl:text-[15px] font-black flex items-center gap-1">
-                  {streakDays} Hari 🔥
+                  {user?.name ? streakDays : streakDays} Hari 🔥
                 </span>
               </div>
             </div>

@@ -13,7 +13,7 @@ const OptionCard = ({ label, description, isSelected, onSelect }: OptionCardProp
       onClick={onSelect}
       className={`w-full text-left p-5 rounded-[12px] border-2 transition-all duration-200 flex flex-row items-start gap-4 group ${
         isSelected 
-        ? 'border-[#3B82F6] bg-[#EFF6FF] shadow-md z-10' // Tambah Z-index agar shadow di atas kartu lain
+        ? 'border-[#3B82F6] bg-[#EFF6FF] shadow-md z-10'
         : 'border-transparent bg-white shadow-sm hover:border-[#D1D5DB] hover:shadow-md z-0'
       }`}
     >

@@ -11,12 +11,10 @@ const UploadCVPage = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // States untuk Upload & Ekstraksi AI
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<'uploading' | 'extracting' | 'error'>('uploading');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Handle pilihan file
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -24,7 +22,6 @@ const UploadCVPage = () => {
     }
   };
 
-  // Drag & Drop Logic
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -49,19 +46,16 @@ const UploadCVPage = () => {
     setUploadStatus('uploading');
 
     try {
-      // 1. Upload CV PDF ke Backend
       console.log('Mengunggah CV ke Cloudinary via Backend...');
       const uploadRes = await cvService.uploadCv(selectedFile);
       const cvId = uploadRes.id;
       console.log('CV berhasil diunggah dengan ID:', cvId);
 
-      // 2. Ekstrak data menggunakan AI
       setUploadStatus('extracting');
       console.log('Memulai ekstraksi AI Nvidia...');
       const extractRes = await cvService.extractCv(cvId);
       console.log('Ekstraksi berhasil! Data:', extractRes);
 
-      // 3. Arahkan ke Halaman Verifikasi dengan data hasil ekstraksi
       navigate('/verify-data', { 
         state: { 
           cvId, 
@@ -69,10 +63,11 @@ const UploadCVPage = () => {
         } 
       });
 
-    } catch (err: any) {
+    } catch (err) {
       console.error('Gagal memproses CV:', err);
       setUploadStatus('error');
-      setErrorMsg(err.response?.data?.message || 'Gagal memproses CV Anda. Pastikan CV merupakan file PDF berbasis teks (bukan hasil scan/gambar) dan coba lagi.');
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      setErrorMsg(axiosError.response?.data?.message || 'Gagal memproses CV Anda. Pastikan CV merupakan file PDF berbasis teks (bukan hasil scan/gambar) dan coba lagi.');
     }
   };
 
@@ -82,7 +77,6 @@ const UploadCVPage = () => {
     setUploadStatus('uploading');
 
     try {
-      // Membuat file PDF dummy berukuran mini yang valid
       const dummyBlob = new Blob(["StepWise Manual User Profile Entry"], { type: "application/pdf" });
       const dummyFile = new File([dummyBlob], "profil_manual.pdf", { type: "application/pdf" });
 
@@ -92,16 +86,14 @@ const UploadCVPage = () => {
       
       console.log('Lembar profil berhasil disiapkan dengan ID:', cvId);
       
-      // Arahkan ke Halaman Verifikasi dengan data kosong/dummy
       navigate('/verify-data', { 
         state: { 
           cvId, 
           extractedInfo: null 
         } 
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Gagal menyiapkan lembar profil manual:', err);
-      // Fallback aman
       navigate('/verify-data');
     } finally {
       setIsUploading(false);
@@ -112,12 +104,10 @@ const UploadCVPage = () => {
     <div className="min-h-screen bg-[#F8F9FF] font-sans flex flex-col antialiased">
       <Navbar minimal />
 
-      <main className="flex-grow flex items-center justify-center py-[64px] px-4 relative">
+      <main className="flex-grow flex items-center justify-center py-12 px-4 relative transition-all">
         
-        {/* Card Utama */}
-        <div className="w-full max-w-[720px] bg-white rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-10 md:p-12 border border-slate-100">
+        <div className="w-full max-w-[720px] bg-white rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-10 md:p-12 border border-slate-100 animate-fadeIn">
           
-          {/* Header Section */}
           <div className="text-center mb-10">
             <span className="inline-flex items-center px-3.5 py-1 bg-[#EFF6FF] text-[#3B82F6] text-[11px] font-extrabold rounded-full border border-[#DBEAFE] uppercase tracking-widest mb-3">
               Langkah Pertama
@@ -128,7 +118,6 @@ const UploadCVPage = () => {
             </p>
           </div>
 
-          {/* Upload Area / Drop Zone */}
           <div 
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -165,7 +154,6 @@ const UploadCVPage = () => {
             </button>
           </div>
 
-          {/* Error Message Alert Card */}
           {errorMsg && (
             <div className="mt-6 bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3 animate-fadeIn">
               <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={18} />
@@ -176,12 +164,11 @@ const UploadCVPage = () => {
             </div>
           )}
 
-          {/* Info & Manual Action */}
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
             <button 
               type="button"
               onClick={handleManualEntry}
-              className="text-[#1E3A5F] hover:text-[#3B82F6] font-extrabold hover:underline text-[13.5px] transition-colors"
+              className="text-[#1E3A5F] hover:text-[#3B82F6] font-extrabold hover:underline text-[13.5px] transition-colors cursor-pointer"
             >
               Belum punya CV? Isi data profil manual di sini ➔
             </button>
@@ -194,7 +181,6 @@ const UploadCVPage = () => {
 
           <hr className="my-8 border-slate-100" />
 
-          {/* Action Button */}
           <div className="flex justify-end">
             <button 
               disabled={!selectedFile || isUploading}
@@ -211,7 +197,6 @@ const UploadCVPage = () => {
 
         </div>
 
-        {/* LOADING OVERLAY - GLASSMORPHISM PREMIUM */}
         {isUploading && uploadStatus !== 'error' && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn">
             <div className="bg-white rounded-[24px] max-w-[420px] w-full p-8 md:p-10 text-center shadow-2xl border border-white flex flex-col items-center">
@@ -230,7 +215,6 @@ const UploadCVPage = () => {
                   : 'AI kami sedang membaca dan mengekstrak keahlian serta riwayat karier Anda secara presisi.'}
               </p>
 
-              {/* Progress bar animation */}
               <div className="w-full space-y-2.5">
                 <div className="h-[6px] rounded-full bg-slate-100 overflow-hidden relative">
                   <div className={`h-full bg-gradient-to-r from-[#3B82F6] to-[#1E3A5F] rounded-full transition-all duration-[3000ms] ${

@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-// Gunakan 'import type' untuk memenuhi aturan verbatimModuleSyntax
 import type { User } from '../types/user';
 import authService from '../services/authService';
 
@@ -10,7 +9,6 @@ interface AuthState {
   logout: () => void;
 }
 
-// Memberikan tipe data eksplisit pada parameter untuk menghindari error 'implicit any'
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,

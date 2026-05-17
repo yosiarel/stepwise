@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   Briefcase, 
@@ -8,22 +8,13 @@ import {
   Target, 
   Edit3, 
   Plus, 
-  Trash2, 
   Check, 
   X, 
   Loader2, 
-  Calendar, 
-  Mail, 
-  Phone, 
-  Clock,
-  Camera
 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import profileService from '../services/profileService';
 
-// ==========================================
-// KONTRAK STRUKTUR DATA (TYPESCRIPT STRICT)
-// ==========================================
 interface EducationItem {
   id: string;
   jenjang: 'SMA' | 'SMK' | 'D3' | 'D4' | 'S1' | 'S2' | 'S3' | 'Profesi';
@@ -50,21 +41,14 @@ interface SkillItem {
 }
 
 const ProfilePage = () => {
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  // State Kontrol Transisi Tampilan UI
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // ==========================================
-  // MASTER STATES (DATA REAL DARI BACKEND)
-  // ==========================================
   const [dataDiri, setDataDiri] = useState({
     namaLengkap: '',
     email: '',
     tanggalLahir: '2004-08-15',
-    nomorTelepon: '',
-    fotoProfil: ''
+    nomorTelepon: ''
   });
   const [isEditDataDiri, setIsEditDataDiri] = useState<boolean>(false);
 
@@ -104,14 +88,10 @@ const ProfilePage = () => {
     kesiapanKerja: 0
   });
 
-  // ==========================================
-  // BUFFER STATES (TEMPAT MENGETIK SEMENTARA)
-  // ==========================================
   const [bufferDataDiri, setBufferDataDiri] = useState({ ...dataDiri });
   const [bufferStatusKerja, setBufferStatusKerja] = useState({ ...statusKerja });
   const [bufferPreferensi, setBufferPreferensi] = useState({ ...preferensi });
 
-  // FUNGSI UTAMA: Memuat Struktur Profil dari API Server
   const loadProfileFromBackend = async () => {
     try {
       const serverData = await profileService.getProfile();
@@ -120,8 +100,7 @@ const ProfilePage = () => {
         namaLengkap: serverData.user.name,
         email: serverData.user.email,
         tanggalLahir: serverData.profile?.tanggalLahir || '2004-08-15',
-        nomorTelepon: serverData.profile?.nomorTelepon || '',
-        fotoProfil: serverData.profile?.fotoProfil || ''
+        nomorTelepon: serverData.profile?.nomorTelepon || ''
       };
 
       const realStatusKerja = {
@@ -145,6 +124,10 @@ const ProfilePage = () => {
       setStatusKerja(realStatusKerja);
       setPreferensi(realPreferensi);
 
+      setBufferDataDiri(realDataDiri);
+      setBufferStatusKerja(realStatusKerja);
+      setBufferPreferensi(realPreferensi);
+
       setPendidikanList((serverData.profile?.educationHistory as unknown as EducationItem[]) || []);
       setPengalamanList((serverData.profile?.workExperiences as unknown as ExperienceItem[]) || []);
       setKeahlianList((serverData.profile?.skillLevels as unknown as SkillItem[]) || []);
@@ -157,7 +140,7 @@ const ProfilePage = () => {
       }
     } catch (err) {
       console.error('Gagal memuat data profil dari server:', err);
-    } {
+    } finally {
       setIsLoading(false);
     }
   };
@@ -185,13 +168,8 @@ const ProfilePage = () => {
     return isNaN(usia) ? 0 : usia;
   };
 
-  // ==========================================
-  // HANDLERS KENDALI PEMBATALAN (CANCEL SAFE)
-  // ==========================================
-  
-  // Seksi Data Diri
   const handleStartEditDataDiri = () => {
-    setBufferDataDiri({ ...dataDiri }); // Salin master ke form buffer
+    setBufferDataDiri({ ...dataDiri });
     setIsEditDataDiri(true);
   };
 
@@ -203,7 +181,7 @@ const ProfilePage = () => {
         tanggalLahir: bufferDataDiri.tanggalLahir,
         nomorTelepon: bufferDataDiri.nomorTelepon
       });
-      setDataDiri({ ...bufferDataDiri }); // Commit perubahan ke master state jika sukses
+      setDataDiri({ ...bufferDataDiri });
       setIsEditDataDiri(false);
       triggerToast("Data diri berhasil disinkronisasi ke server!");
     } catch (err) {
@@ -212,7 +190,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Seksi Status Kerja
   const handleStartEditStatus = () => {
     setBufferStatusKerja({ ...statusKerja });
     setIsEditStatus(true);
@@ -236,7 +213,6 @@ const ProfilePage = () => {
     }
   };
 
-  // Seksi Preferensi Belajar
   const handleStartEditPreferensi = () => {
     setBufferPreferensi({ ...preferensi });
     setIsEditPreferensi(true);
@@ -256,32 +232,6 @@ const ProfilePage = () => {
       console.error(err);
       alert('Gagal memperbarui data preferensi.');
     }
-  };
-
-  // Handler Unggah File Foto Profil
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const localPreviewUrl = URL.createObjectURL(file);
-      setDataDiri(prev => ({ ...prev, fotoProfil: localPreviewUrl }));
-
-      const formData = new FormData();
-      formData.append('avatar', file);
-      
-      const uploadResult = await profileService.uploadAvatar(formData);
-      setDataDiri(prev => ({ ...prev, fotoProfil: uploadResult.fotoProfilUrl }));
-
-      triggerToast("Foto profil Anda berhasil diunggah! 📸");
-    } catch (err) {
-      console.error('Gagal mengunggah foto profil:', err);
-      alert('Terjadi kesalahan teknis saat mengirim berkas ke server.');
-    }
-  };
-
-  const pemicuPilihBerkas = () => {
-    fileInputRef.current?.click();
   };
 
   const handleHapusSkill = async (id: string) => {
@@ -333,11 +283,8 @@ const ProfilePage = () => {
 
   return (
     <DashboardLayout>
-      <div className="w-full max-w-[1200px] mx-auto font-sans text-[#1F2937] px-4 md:px-0 pb-12 transition-all relative space-y-6">
+      <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto font-sans text-[#1F2937] px-4 md:px-0 pb-12 transition-all relative space-y-6">
         
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-
-        {/* HEADER AREA */}
         <div>
           <h1 className="text-[28px] font-bold leading-[36px] text-[#1F2937] tracking-tight mb-1 flex items-center gap-3">
             <User className="text-[#3B82F6]" size={26} /> Profil Pengguna
@@ -347,64 +294,42 @@ const ProfilePage = () => {
           </p>
         </div>
 
-        {/* SEKSI 1: DATA DIRI */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3 mb-4">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
               <User size={18} className="text-[#3B82F6]" /> Data Diri
             </h3>
             {isEditDataDiri ? (
-              <button onClick={() => setIsEditDataDiri(false)} className="h-[36px] px-4 border border-[#D1D5DB] hover:bg-[#F3F4F6] text-[14px] font-medium rounded-[8px] flex items-center gap-1.5 cursor-pointer text-[#1F2937]">
+              <button onClick={() => setIsEditDataDiri(false)} className="h-[36px] px-4 border border-[#D1D5DB] hover:bg-[#F3F4F6] text-[14px] font-medium rounded-[8px] flex items-center gap-1.5 transition-colors cursor-pointer text-[#1F2937]">
                 <X size={14} /> Batal
               </button>
             ) : (
-              <button onClick={handleStartEditDataDiri} className="h-[36px] px-4 border border-[#D1D5DB] hover:bg-[#F3F4F6] text-[14px] font-medium rounded-[8px] flex items-center gap-1.5 cursor-pointer text-[#1F2937]">
+              <button onClick={handleStartEditDataDiri} className="h-[36px] px-4 border border-[#D1D5DB] hover:bg-[#F3F4F6] text-[14px] font-medium rounded-[8px] flex items-center gap-1.5 transition-colors cursor-pointer text-[#1F2937]">
                 <Edit3 size={14} /> Edit
               </button>
             )}
           </div>
 
           {isEditDataDiri ? (
-            <div className="flex flex-col md:flex-row gap-6 items-start">
-              <div className="flex flex-col items-center gap-2 shrink-0 w-full md:w-auto md:pr-4">
-                <div onClick={pemicuPilihBerkas} className="w-24 h-24 rounded-full bg-[#F3F4F6] border border-[#D1D5DB] flex items-center justify-center text-[#6B7280] relative group overflow-hidden shadow-inner cursor-pointer">
-                  {dataDiri.fotoProfil ? <img src={dataDiri.fotoProfil} alt="Avatar" className="w-full h-full object-cover" /> : <User size={40} className="text-[#9CA3AF]" />}
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"><Camera size={18} /></div>
-                </div>
-                <button type="button" onClick={pemicuPilihBerkas} className="text-[12px] font-semibold text-[#3B82F6] hover:text-[#1E3A5F] cursor-pointer">Ubah Foto</button>
-              </div>
-
-              {/* Input Diikat ke bufferDataDiri (Aman dari Mutasi saat Batal) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-grow w-full">
-                <div className="space-y-1"><label className="text-[14px] font-medium text-[#1F2937]">Nama Lengkap</label><input type="text" value={bufferDataDiri.namaLengkap} onChange={(e) => setBufferDataDiri({...bufferDataDiri, namaLengkap: e.target.value})} className="w-full h-[44px] px-3 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none focus:border-[#3B82F6]" /></div>
-                <div className="space-y-1"><label className="text-[14px] font-medium text-[#1F2937]">Email</label><input type="email" value={bufferDataDiri.email} onChange={(e) => setBufferDataDiri({...bufferDataDiri, email: e.target.value})} className="w-full h-[44px] px-3 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none focus:border-[#3B82F6]" /></div>
-                <div className="space-y-1"><label className="text-[14px] font-medium text-[#1F2937]">Tanggal Lahir</label><input type="date" value={bufferDataDiri.tanggalLahir} onChange={(e) => setBufferDataDiri({...bufferDataDiri, tanggalLahir: e.target.value})} className="w-full h-[44px] px-3 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none focus:border-[#3B82F6]" /></div>
-                <div className="space-y-1"><label className="text-[14px] font-medium text-[#1F2937]">Nomor Telepon (Opsional)</label><input type="text" value={bufferDataDiri.nomorTelepon} onChange={(e) => setBufferDataDiri({...bufferDataDiri, nomorTelepon: e.target.value})} className="w-full h-[44px] px-3 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none focus:border-[#3B82F6]" /></div>
-                <div className="sm:col-span-2 pt-2 flex justify-end">
-                  <button onClick={handleSaveDataDiri} className="h-[40px] px-5 bg-[#1E3A5F] text-white font-medium text-[14px] rounded-[8px] flex items-center gap-1 hover:bg-[#152A44] cursor-pointer"><Check size={14} /> Simpan Perubahan</button>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full animate-fadeIn">
+              <div className="space-y-1"><label className="text-[14px] font-medium text-[#1F2937]">Nama Lengkap</label><input type="text" value={bufferDataDiri.namaLengkap} onChange={(e) => setBufferDataDiri({...bufferDataDiri, namaLengkap: e.target.value})} className="w-full h-[44px] px-3 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none focus:border-[#3B82F6]" /></div>
+              <div className="space-y-1"><label className="text-[14px] font-medium text-[#1F2937]">Email</label><input type="email" value={bufferDataDiri.email} onChange={(e) => setBufferDataDiri({...bufferDataDiri, email: e.target.value})} className="w-full h-[44px] px-3 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none focus:border-[#3B82F6]" /></div>
+              <div className="space-y-1"><label className="text-[14px] font-medium text-[#1F2937]">Tanggal Lahir</label><input type="date" value={bufferDataDiri.tanggalLahir} onChange={(e) => setBufferDataDiri({...bufferDataDiri, tanggalLahir: e.target.value})} className="w-full h-[44px] px-3 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none focus:border-[#3B82F6]" /></div>
+              <div className="space-y-1"><label className="text-[14px] font-medium text-[#1F2937]">Nomor Telepon (Opsional)</label><input type="text" value={bufferDataDiri.nomorTelepon} onChange={(e) => setBufferDataDiri({...bufferDataDiri, nomorTelepon: e.target.value})} className="w-full h-[44px] px-3 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none focus:border-[#3B82F6]" /></div>
+              <div className="sm:col-span-2 pt-2 flex justify-end">
+                <button onClick={handleSaveDataDiri} className="h-[40px] px-5 bg-[#1E3A5F] text-white font-medium text-[14px] rounded-[8px] flex items-center gap-1 hover:bg-[#152A44] cursor-pointer"><Check size={14} /> Simpan Perubahan</button>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-              <div className="shrink-0">
-                <div onClick={pemicuPilihBerkas} className="w-24 h-24 rounded-full bg-[#F3F4F6] border border-[#D1D5DB] flex items-center justify-center text-[#6B7280] shadow-sm overflow-hidden group relative" title="Klik untuk ubah foto">
-                  {dataDiri.fotoProfil ? <img src={dataDiri.fotoProfil} alt="Avatar" className="w-full h-full object-cover" /> : <User size={44} className="text-[#9CA3AF]" />}
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"><Camera size={16} /></div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[15px] flex-grow w-full">
-                <div className="flex items-center gap-3 bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><User size={18} className="text-[#6B7280]" /><div><span className="text-[12px] text-[#6B7280] block">Nama Lengkap</span><span className="font-medium text-[#1F2937]">{dataDiri.namaLengkap}</span></div></div>
-                <div className="flex items-center gap-3 bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><Mail size={18} className="text-[#6B7280]" /><div><span className="text-[12px] text-[#6B7280] block">Email</span><span className="font-medium text-[#1F2937]">{dataDiri.email}</span></div></div>
-                <div className="flex items-center gap-3 bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><Calendar size={18} className="text-[#6B7280]" /><div><span className="text-[12px] text-[#6B7280] block">Tanggal Lahir (Usia otomatis)</span><span className="font-medium text-[#1F2937]">{dataDiri.tanggalLahir} ({hitungUsia(dataDiri.tanggalLahir)} Tahun)</span></div></div>
-                <div className="flex items-center gap-3 bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><Phone size={18} className="text-[#6B7280]" /><div><span className="text-[12px] text-[#6B7280] block">Nomor Telepon</span><span className="font-medium text-[#1F2937]">{dataDiri.nomorTelepon || 'Belum diisi'}</span></div></div>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[15px] w-full animate-fadeIn">
+              <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><span className="text-[12px] text-[#6B7280] block uppercase">Nama Lengkap</span><span className="text-[16px] font-medium text-[#1F2937] block truncate">{dataDiri.namaLengkap}</span></div>
+              <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><span className="text-[12px] text-[#6B7280] block uppercase">Email</span><span className="text-[16px] font-medium text-[#1F2937] block truncate">{dataDiri.email}</span></div>
+              <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><span className="text-[12px] text-[#6B7280] block uppercase">Tanggal Lahir (Usia otomatis)</span><span className="text-[16px] font-medium text-[#1F2937]">{dataDiri.tanggalLahir} ({hitungUsia(dataDiri.tanggalLahir)} Tahun)</span></div>
+              <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><span className="text-[12px] text-[#6B7280] block uppercase">Nomor Telepon</span><span className="text-[16px] font-medium text-[#1F2937]">{dataDiri.nomorTelepon || 'Belum diisi'}</span></div>
             </div>
           )}
         </div>
 
-        {/* SEKSI 2: STATUS & PEKERJAAN */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3 mb-4">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -459,7 +384,6 @@ const ProfilePage = () => {
           )}
         </div>
 
-        {/* PENDIDIKAN SECTION */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] space-y-4">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -490,7 +414,6 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* PENGALAMAN KERJA SECTION */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] space-y-4">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -521,7 +444,6 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* KEAHLIAN SECTION */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] space-y-4">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -533,9 +455,46 @@ const ProfilePage = () => {
           </div>
 
           {isAddingSkill && (
-            <form onSubmit={handleTambahSkillSubmit} className="p-4 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] space-y-3">
-              <input type="text" placeholder="Ketik nama skill baru..." value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)} className="w-full h-[44px] px-3 bg-white border border-[#D1D5DB] rounded-[8px]" />
-              <button type="submit" className="h-[36px] px-4 bg-[#10B981] text-white text-[14px] font-medium rounded-[8px] cursor-pointer">Simpan Keahlian</button>
+            <form onSubmit={handleTambahSkillSubmit} className="p-4 bg-[#F3F4F6] border border-[#D1D5DB] rounded-[8px] space-y-3 animate-fadeIn">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[13px] font-medium text-[#1F2937]">Nama Keahlian</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ketik nama skill..." 
+                    value={newSkillName} 
+                    onChange={(e) => setNewSkillName(e.target.value)} 
+                    className="w-full h-[40px] px-3 bg-white border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none focus:border-[#3B82F6]" 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[13px] font-medium text-[#1F2937]">Kategori</label>
+                  <select 
+                    value={newSkillKategori} 
+                    onChange={(e) => setNewSkillKategori(e.target.value as 'teknis' | 'non-teknis')} 
+                    className="w-full h-[40px] px-3 bg-white border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none"
+                  >
+                    <option value="teknis">Teknis</option>
+                    <option value="non-teknis">Non-Teknis</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[13px] font-medium text-[#1F2937]">Tingkat Kemahiran</label>
+                  <select 
+                    value={newSkillLevel} 
+                    onChange={(e) => setNewSkillLevel(e.target.value as 'Beginner' | 'Intermediate' | 'Advanced')} 
+                    className="w-full h-[40px] px-3 bg-white border border-[#D1D5DB] rounded-[8px] text-[14px] outline-none"
+                  >
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-1">
+                <button type="button" onClick={() => setIsAddingSkill(false)} className="h-[36px] px-4 border border-[#D1D5DB] hover:bg-white text-[13px] font-medium rounded-[8px]">Batal</button>
+                <button type="submit" className="h-[36px] px-4 bg-[#10B981] text-white text-[14px] font-medium rounded-[8px] cursor-pointer hover:bg-[#059669]">Simpan Keahlian</button>
+              </div>
             </form>
           )}
 
@@ -552,7 +511,6 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* PREFERENSI BELAJAR & KARIER SECTION */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3 mb-4">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -605,7 +563,6 @@ const ProfilePage = () => {
           )}
         </div>
 
-        {/* TARGET KARIER SECTION */}
         <div className="bg-white rounded-[12px] p-6 border border-[#D1D5DB] shadow-[0_2px_8px_rgba(0,0,0,0.08)] space-y-4">
           <div className="border-b border-[#E5E7EB] pb-3">
             <h3 className="text-[18px] font-semibold leading-[24px] text-[#1F2937] flex items-center gap-2">
@@ -645,7 +602,6 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* TOAST PANEL */}
         {toastMessage && (
           <div className="fixed top-6 right-6 bg-[#1F2937] text-white px-4 py-3 rounded-[8px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] font-medium text-[14px] leading-[20px] animate-slideInRight z-50 flex items-center gap-2 border border-[#E5E7EB]/10 max-w-[80vw]">
             <Check size={16} strokeWidth={3} className="shrink-0 text-[#10B981]" /> 

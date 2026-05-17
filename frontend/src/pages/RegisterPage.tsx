@@ -14,8 +14,6 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import authService from '../services/authService';
-// REVISI: Di-comment agar tidak memicu error linter karena tidak lagi digunakan setelah Footer dihapus dari UI
-// import Footer from '../components/Footer';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -76,9 +74,11 @@ const RegisterPage = () => {
         category: formData.status
       });
       navigate('/login');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Terjadi kesalahan saat mendaftar.');
-    } finally {
+    } catch (err) {
+      console.error('Register error detail:', err);
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      setError(axiosError.response?.data?.message || 'Terjadi kesalahan saat mendaftar.');
+    } {
       setIsLoading(false);
     }
   };
@@ -92,7 +92,6 @@ const RegisterPage = () => {
     <div className="min-h-screen bg-white font-sans flex flex-col antialiased">
       <Navbar minimal />
       
-      {/* PERBAIKAN TAKTIS: Mengubah py-[64px] menjadi p-4 agar perataan vertikal flexbox bekerja 100% akurat di layar besar tanpa memicu scrollbar serangga */}
       <main className="flex-grow flex items-center justify-center p-4">
         <div className="w-full max-w-[480px] bg-white rounded-[12px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] p-10 md:p-12 border border-gray-50">
           <div className="text-center mb-8">
@@ -214,7 +213,7 @@ const RegisterPage = () => {
 
             <button 
               type="submit" disabled={!isFormValid || isLoading}
-              className="w-full h-[48px] bg-[#1E3A5F] text-white rounded-[8px] font-bold text-[16px] hover:bg-[#152A44] disabled:bg-[#D1D5DB] transition-all flex items-center justify-center gap-2 mt-4 shadow-sm"
+              className="w-full h-[48px] bg-[#1E3A5F] text-white rounded-[8px] font-bold text-[16px] hover:bg-[#152A44] disabled:bg-[#D1D5DB] transition-all flex items-center justify-center gap-2 mt-4 shadow-sm cursor-pointer"
             >
               {isLoading ? <><Loader2 className="animate-spin" size={20} /><span>Memproses...</span></> : 'Daftar Sekarang'}
             </button>
