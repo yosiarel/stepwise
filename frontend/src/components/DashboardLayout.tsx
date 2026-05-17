@@ -106,7 +106,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           {isExpanded && <span className="animate-fadeIn">Bantuan</span>}
         </button>
         <button 
-          onClick={() => navigate('/')}
+          onClick={async () => {
+            try {
+              await logout();
+              navigate('/login');
+            } catch (err) {
+              console.error('Logout failed, forcing client logout:', err);
+              navigate('/login');
+            }
+          }}
           className={`w-full h-[40px] rounded-lg flex items-center text-[13.5px] font-bold text-rose-500 hover:bg-rose-50/50 transition-colors ${isExpanded ? 'px-3 gap-3 justify-start' : 'px-0 justify-center'}`}
         >
           <LogOut size={18} />
