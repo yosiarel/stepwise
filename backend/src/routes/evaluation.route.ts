@@ -6,6 +6,8 @@ import {
   decideProposal,
   getNotifications,
   readNotification,
+  getLastCompletedEvaluation,
+  getPendingEvaluation,
 } from '../controllers/evaluation.controller.js';
 import { authenticate } from '../middlewares/authenticate.middleware.js';
 
@@ -149,5 +151,8 @@ router.get('/notifications', getNotifications);
  *         description: Notifikasi dibaca
  */
 router.patch('/notification/:id/read', readNotification);
+
+router.get('/last-completed', getLastCompletedEvaluation);
+router.get('/pending', getPendingEvaluation);
 
 export default router;

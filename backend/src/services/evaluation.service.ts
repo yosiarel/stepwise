@@ -351,3 +351,23 @@ export const readNotificationService = async (userId: string, notificationId: st
   const { markNotificationRead } = await import('../repositories/evaluation.repository.js');
   return markNotificationRead(notificationId);
 };
+
+export const getLastCompletedEvaluationService = async (userId: string) => {
+  const lastEval = await prisma.periodicEvaluation.findFirst({
+    where: { userId, status: 'COMPLETED' },
+    orderBy: { createdAt: 'desc' },
+  });
+  return lastEval;
+};
+
+export const getPendingEvaluationService = async (userId: string) => {
+  const roadmap = await prisma.roadmap.findFirst({
+    where: { userId, status: 'ACTIVE' },
+  });
+  if (!roadmap) return null;
+
+  const pending = await prisma.periodicEvaluation.findFirst({
+    where: { userId, roadmapId: roadmap.id, status: 'PENDING' },
+  });
+  return pending;
+};

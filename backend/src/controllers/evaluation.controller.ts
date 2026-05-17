@@ -6,6 +6,8 @@ import {
   decideProposalService,
   getNotificationsService,
   readNotificationService,
+  getLastCompletedEvaluationService,
+  getPendingEvaluationService,
 } from '../services/evaluation.service.js';
 
 export const triggerEvaluation = async (req: Request, res: Response, next: NextFunction) => {
@@ -56,6 +58,20 @@ export const getNotifications = async (req: Request, res: Response, next: NextFu
 export const readNotification = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await readNotificationService(req.user!.sub, req.params.id as string);
+    res.status(200).json({ data });
+  } catch (err) { next(err); }
+};
+
+export const getLastCompletedEvaluation = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await getLastCompletedEvaluationService(req.user!.sub);
+    res.status(200).json({ data });
+  } catch (err) { next(err); }
+};
+
+export const getPendingEvaluation = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await getPendingEvaluationService(req.user!.sub);
     res.status(200).json({ data });
   } catch (err) { next(err); }
 };
