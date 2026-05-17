@@ -23,7 +23,7 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
 
   const [isDesktopExpanded, setIsDesktopExpanded] = useState<boolean>(true); 
   const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false); 

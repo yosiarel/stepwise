@@ -29,7 +29,9 @@ const Phase2APage = () => {
   }
 
   const isMultiChoice = currentQuestion.inputType === 'multi_choice';
-  const maxSelect = currentQuestion.maxSelections || 1;
+  
+  const parsedMax = currentQuestion.helpText ? parseInt(currentQuestion.helpText.match(/\d+/)?.[0] || '0', 10) : 0;
+  const maxSelect = currentQuestion.maxSelections || (isMultiChoice ? (parsedMax > 0 ? parsedMax : currentQuestion.options.length) : 1);
 
   const handleSelect = (value: string) => {
     if (!isMultiChoice) {

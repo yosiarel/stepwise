@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import advisorService from '../services/advisorService';
+import evaluationService from '../services/evaluationService';
 
 interface LocalMessage {
   id: string;
@@ -134,13 +135,35 @@ const AdvisorPage = () => {
       setIsSending(true);
       const responseData = await advisorService.sendMessage(userRawText);
       
+      let proposalId = responseData.proposal?.id;
+      
+      if (responseData.proposal && !proposalId) {
+        try {
+          const pendingData = await evaluationService.getPendingProposals();
+          const proposals = pendingData.proposals || [];
+          const matchedProposal = proposals.find(p => 
+            p.type === responseData.proposal?.type && 
+            p.description === responseData.proposal?.description && 
+            p.decision === 'PENDING'
+          );
+          if (matchedProposal) {
+            proposalId = matchedProposal.id;
+          } else {
+            const latestAdvisorProposal = [...proposals].reverse().find(p => p.triggeredByAdvisor && p.decision === 'PENDING');
+            if (latestAdvisorProposal) proposalId = latestAdvisorProposal.id;
+          }
+        } catch (err) {
+          console.error('Failed to fetch pending proposal ID:', err);
+        }
+      }
+      
       const aiMessage: LocalMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
         text: responseData.reply,
         time: currentTimeStr,
         proposal: responseData.proposal ? {
-          id: responseData.proposal.id,
+          id: proposalId || 'unknown',
           type: responseData.proposal.type,
           description: responseData.proposal.description,
           status: 'pending'
