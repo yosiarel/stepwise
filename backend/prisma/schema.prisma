@@ -13,13 +13,126 @@ datasource db {
 }
 
 enum UserCategory {
-  PELAJAR_SMA_SMK  // Pelajar SMA/SMK
+  PELAJAR_SMA_SMK
+  MAHASISWA
+  FRESH_GRADUATE
+  BEKERJA
+  TIDAK_BEKERJA
+  UMUM
+  LAINNYA
+}
+
+enum CurrentStatus {
+  PELAJAR_SMA_SMK  // Pelajar SMA atau SMK
   MAHASISWA        // Mahasiswa aktif
-  FRESH_GRADUATE   // Fresh Graduate
-  BEKERJA          // Sudah bekerja
+  FRESH_GRADUATE   // Lulusan baru
+  BEKERJA          // Sedang bekerja
   TIDAK_BEKERJA    // Tidak/belum bekerja
-  UMUM             // Umum
-  LAINNYA          // Lainnya
+}
+
+enum EducationLevel {
+  SMA
+  SMK
+  D3
+  D4
+  S1
+  S2
+  S3
+  PROFESI
+}
+
+enum EducationStatus {
+  LULUS
+  SEDANG_DITEMPUH
+}
+
+enum WorkType {
+  FORMAL
+  SERABUTAN
+  WIRAUSAHA
+  FREELANCE
+  PNS
+  TNI_POLRI
+  MAGANG
+  SUKARELAWAN
+  IRT
+  TIDAK_BEKERJA
+}
+
+enum SkillCategory {
+  TEKNIS
+  NON_TEKNIS
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum TechSavvyLevel {
+  RENDAH
+  MENENGAH
+  TINGGI
+  SANGAT_TINGGI
+}
+
+enum ITBackgroundLevel {
+  NOL
+  MINIM
+  ADA
+  KUAT
+}
+
+enum LearningStyle {
+  VISUAL
+  AUDITORI
+  PRAKTIK_LANGSUNG
+  MEMBACA_MENULIS
+}
+
+enum WorkEnvPreference {
+  INDIVIDU
+  TIM_KECIL
+  TIM_BESAR
+  FLEKSIBEL
+}
+
+enum CompanyTypePreference {
+  STARTUP
+  KORPORAT
+  FREELANCE
+  TECH_COMPANY
+  BELUM_TERPIKIRKAN
+}
+
+enum WeeklyHoursRange {
+  LESS_THAN_5   
+  FIVE_TO_10   
+  TEN_TO_20     
+  MORE_THAN_20 
+}
+
+enum MonthlyIncomeRange {
+  LESS_THAN_1M  
+  ONE_TO_3M     
+  THREE_TO_7M   
+  SEVEN_TO_12M  
+  MORE_THAN_12M 
+}
+
+enum AssessmentPath {
+  NON_TEKNIS
+  TEKNIS
+}
+
+enum WorkPersonality {
+  SI_PRAKTIS
+  SI_PEMIKIR
+  SI_KREATIF
+  SI_PENOLONG
+  SI_PEMIMPIN
+  SI_TERATUR
 }
 
 enum AssessmentStatus {
@@ -28,38 +141,32 @@ enum AssessmentStatus {
 }
 
 enum RecommendationStatus {
-  ACTIVE    
-  ARCHIVED  
+  ACTIVE
+  ARCHIVED
 }
 
 enum RoadmapStatus {
   ACTIVE
   COMPLETED
-  REPLACED  
+  REPLACED
 }
 
 enum EvaluationStatus {
-  PENDING   
-  COMPLETED 
+  PENDING
+  COMPLETED
 }
 
 enum AdjustmentType {
-  SCHEDULE_SPEED    
-  REORDER_MATERIAL 
-  ADD_MATERIAL    
-  CHANGE_CAREER     
+  SCHEDULE_SPEED
+  REORDER_MATERIAL
+  ADD_MATERIAL
+  CHANGE_CAREER
 }
 
 enum AdjustmentDecision {
   PENDING
   APPROVED
   REJECTED
-}
-
-enum SkillLevel {
-  BEGINNER
-  INTERMEDIATE
-  PROFESSIONAL
 }
 
 enum NotificationType {
@@ -73,20 +180,23 @@ enum NotificationStatus {
 }
 
 
-// USER & PROFILE
-
 model User {
-  id             String       @id @default(cuid())
-  email          String       @unique
-  passwordHash   String
-  name           String
-  category       UserCategory?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  name         String
+  birthDate    DateTime?
+  phone        String?
+  category     UserCategory?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   profile               UserProfile?
   refreshTokens         RefreshToken[]
   cvUploads             CvUpload[]
+  educationHistories    EducationHistory[]
+  workExperiences       WorkExperience[]
+  skills                UserSkill[]
   assessmentSessions    AssessmentSession[]
   recommendationSessions RecommendationSession[]
   activeRoadmap         Roadmap?               @relation("ActiveRoadmap")
@@ -98,42 +208,42 @@ model User {
   @@map("users")
 }
 
-// REFRESH TOKEN
-
-model RefreshToken {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  token     String   @unique  // hashed refresh token
-  expiresAt DateTime
-  isRevoked Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  @@map("refresh_tokens")
-}
-
-// Data profil hasil ekstraksi CV + kuesioner 
 model UserProfile {
   id     String @id @default(cuid())
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Dari CV
-  educationHistory  Json?    // [{institution, degree, major, year}]
-  workExperiences   Json?    // [{company, role, duration, description}]
-  extractedSkills   String[]  // raw skill names dari CV
-  skillLevels       Json?     // [{name: string, level: "BEGINNER"|"INTERMEDIATE"|"PROFESSIONAL"|null}]
+  currentStatus   CurrentStatus?
+  statusSince     DateTime?      
+  currentJobTitle String?        
+  currentJobDesc  String?        
+  institutionName String?        
 
-  // Background IT (dikombinasikan dengan UserCategory untuk konteks Gemini)
-  itBackground      Boolean? 
-  itBackgroundNote  String?  
+  techSavvyLevel    TechSavvyLevel?
+  itBackgroundLevel ITBackgroundLevel?
 
-  itInterests       String[] 
-  learningStyle     String?  
-  workEnvPreference String?  
-  weeklyHours       Int?    
-  preferredStudyTime String[]
+  itBackground     Boolean?
+  itBackgroundNote String?
+
+  learningStyle         LearningStyle?
+  workEnvPreference     WorkEnvPreference?
+  companyTypePreference CompanyTypePreference?
+  weeklyHoursRange      WeeklyHoursRange?
+  weeklyHours           Int?                   
+  preferredStudyTime    String[]               
+  monthlyIncome         MonthlyIncomeRange?
+
+  assessmentPath  AssessmentPath?
+  workPersonality WorkPersonality?
+
+  eventRoleInterest String?
+  leisureInterest   String[]
+  challengeAttitude String?
+  itFieldInterest String[]
+  mainMotivation  String[]
+
+  itInterests     String[]
+  extractedSkills String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -141,33 +251,126 @@ model UserProfile {
   @@map("user_profiles")
 }
 
-// CV UPLOAD & EXTRACTION
+model EducationHistory {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  level     EducationLevel
+  major     String
+  status    EducationStatus
+  semester  Int?           
+  yearGraduated Int?        
+  institution   String?    
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("education_histories")
+}
+
+model WorkExperience {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  workType    WorkType
+  jobTitle    String
+  companyName String?  
+  duration    String   
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("work_experiences")
+}
+
+model UserSkill {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name     String
+  category SkillCategory
+  level    SkillLevel
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, name])
+  @@map("user_skills")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token     String   @unique
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
 
 model CvUpload {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   fileName     String
   fileUrl      String
-  publicId     String?  
-  extractedRaw Json?    
-  isReviewed   Boolean  @default(false)
+  publicId     String?
+  extractedRaw Json?
+  isReviewed   Boolean @default(false)
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@map("cv_uploads")
 }
 
-// HYBRID ASSESSMENT
+model AssessmentQuestion {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  text          String
+  helpText      String?
+  inputType     String  
+  maxSelections Int?
+  order         Int
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  options AssessmentOption[]
+  answers AssessmentAnswer[]
+
+  @@map("assessment_questions")
+}
+
+model AssessmentOption {
+  id         String             @id @default(cuid())
+  questionId String
+  question   AssessmentQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  label           String
+  value           String
+  order           Int
+  nextQuestionKey String?
+
+  createdAt DateTime @default(now())
+
+  @@map("assessment_options")
+}
 
 model AssessmentSession {
-  id        String           @id @default(cuid())
-  userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status    AssessmentStatus @default(IN_PROGRESS)
+  id     String           @id @default(cuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status AssessmentStatus @default(IN_PROGRESS)
 
-  answers   AssessmentAnswer[]
+  answers AssessmentAnswer[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -175,63 +378,27 @@ model AssessmentSession {
   @@map("assessment_sessions")
 }
 
-model AssessmentQuestion {
-  id             String   @id @default(cuid())
-  key            String   @unique
-  text           String
-  helpText       String?
-  inputType      String            // "single_choice" | "multi_choice"
-  maxSelections  Int?              // hanya untuk multi_choice, null = unlimited
-  order          Int
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  options      AssessmentOption[]
-  answers      AssessmentAnswer[]
-
-  @@map("assessment_questions")
-}
-
 model AssessmentAnswer {
-  id          String            @id @default(cuid())
-  sessionId   String
-  session     AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id        String            @id @default(cuid())
+  sessionId String
+  session   AssessmentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
   questionId  String
   question    AssessmentQuestion @relation(fields: [questionId], references: [id])
+  questionKey String
+  answerValue String
 
-  questionKey String   
-  answerValue String   
-
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([sessionId, questionId])
   @@map("assessment_answers")
 }
 
-model AssessmentOption {
-  id              String            @id @default(cuid())
-  questionId      String
-  question        AssessmentQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  label           String   // teks pilihan, e.g. "SMA/SMK"
-  value           String   // nilai yang disimpan, e.g. "SMA_SMK"
-  order           Int      // urutan tampil
-  nextQuestionKey String?  // key pertanyaan berikutnya (null = pertanyaan terakhir di jalur ini)
-
-  createdAt       DateTime @default(now())
-
-  @@map("assessment_options")
-}
-
-
-// CAREER RECOMMENDATION
-
 model RecommendationSession {
-  id        String               @id @default(cuid())
-  userId    String
-  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status    RecommendationStatus @default(ACTIVE)
+  id     String               @id @default(cuid())
+  userId String
+  user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status RecommendationStatus @default(ACTIVE)
 
   recommendations CareerRecommendation[]
 
@@ -241,133 +408,128 @@ model RecommendationSession {
 }
 
 model CareerRecommendation {
-  id          String                @id @default(cuid())
-  sessionId   String
-  session     RecommendationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id        String                @id @default(cuid())
+  sessionId String
+  session   RecommendationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
-  rank              Int    
-  professionTitle   String
-  readinessPercent  Int     
-  skills            Json     
+  rank             Int
+  professionTitle  String
+  readinessPercent Int
+
+  skills            Json
 
   reasonSummary     String
-  professionOverview Json   
+  professionOverview Json
 
-  isSelected        Boolean  @default(false) 
+  isSelected Boolean @default(false)
 
-  roadmaps          Roadmap[]
+  roadmaps Roadmap[]
 
   @@map("career_recommendations")
 }
-// ROADMAP & MATERI
 
 model Roadmap {
-  id                     String               @id @default(cuid())
-  userId                 String
-  user                   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  recommendationId       String
-  recommendation         CareerRecommendation @relation(fields: [recommendationId], references: [id])
-  status                 RoadmapStatus        @default(ACTIVE)
+  id               String               @id @default(cuid())
+  userId           String
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendationId String
+  recommendation   CareerRecommendation @relation(fields: [recommendationId], references: [id])
+  status           RoadmapStatus        @default(ACTIVE)
 
-  activeForUserId        String?              @unique
-  activeForUser          User?                @relation("ActiveRoadmap", fields: [activeForUserId], references: [id])
+  activeForUserId String? @unique
+  activeForUser   User?   @relation("ActiveRoadmap", fields: [activeForUserId], references: [id])
 
-  weeklyHoursAtCreation  Int 
+  weeklyHoursAtCreation Int
 
-  materials              RoadmapMaterial[]
-  evaluations            PeriodicEvaluation[]
-  adjustmentProposals    AdjustmentProposal[]
+  materials           RoadmapMaterial[]
+  evaluations         PeriodicEvaluation[]
+  adjustmentProposals AdjustmentProposal[]
 
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("roadmaps")
 }
 
 model RoadmapMaterial {
-  id          String  @id @default(cuid())
-  roadmapId   String
-  roadmap     Roadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  roadmapId String
+  roadmap   Roadmap @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
 
-  order       Int    
-  phase       String  
+  order       Int
+  phase       String
   title       String
   description String?
-  scheduledAt DateTime? 
+  scheduledAt DateTime?
   isCompleted Boolean   @default(false)
   completedAt DateTime?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("roadmap_materials")
 }
 
-// PERIODIC EVALUATION
-
 model PeriodicEvaluation {
-  id         String           @id @default(cuid())
-  userId     String
-  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  roadmapId  String
-  roadmap    Roadmap          @relation(fields: [roadmapId], references: [id])
-  status     EvaluationStatus @default(PENDING)
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roadmapId String
+  roadmap   Roadmap          @relation(fields: [roadmapId], references: [id])
+  status    EvaluationStatus @default(PENDING)
 
-  completedMaterials   Int
-  totalMaterials       Int
+  completedMaterials     Int
+  totalMaterials         Int
   readinessPercentAtEval Int
 
-  paceComfort          String? 
+  paceComfort          String?
   interestShifted      Boolean?
   timeAvailabilityNote String?
   freeNotes            String?
 
-  proposedAdjustments  AdjustmentProposal[]
+  proposedAdjustments AdjustmentProposal[]
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("periodic_evaluations")
 }
 
-// ADJUSTMENT PROPOSAL
-
-
 model AdjustmentProposal {
-  id           String             @id @default(cuid())
-  userId       String
-  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  roadmapId    String
-  roadmap      Roadmap            @relation(fields: [roadmapId], references: [id])
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  evaluationId String?
-  evaluation   PeriodicEvaluation? @relation(fields: [evaluationId], references: [id])
-  triggeredByAdvisor Boolean       @default(false)
+  roadmapId  String
+  roadmap    Roadmap @relation(fields: [roadmapId], references: [id])
 
-  type         AdjustmentType
-  decision     AdjustmentDecision @default(PENDING)
-  description  String             
-  payload      Json               
+  evaluationId       String?
+  evaluation         PeriodicEvaluation? @relation(fields: [evaluationId], references: [id])
+  triggeredByAdvisor Boolean             @default(false)
 
-  decidedAt    DateTime?
-  createdAt    DateTime           @default(now())
+  type        AdjustmentType
+  decision    AdjustmentDecision @default(PENDING)
+  description String
+  payload     Json
+
+  decidedAt DateTime?
+  createdAt DateTime  @default(now())
 
   @@map("adjustment_proposals")
 }
 
-//Notification
 model Notification {
-  id        String             @id @default(cuid())
-  userId    String
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  type      NotificationType
-  status    NotificationStatus @default(UNREAD)
-  title     String
-  body      String
-  metadata  Json?              // e.g. { evaluationId, roadmapId }
+  type     NotificationType
+  status   NotificationStatus @default(UNREAD)
+  title    String
+  body     String
+  metadata Json?
 
-  createdAt DateTime           @default(now())
+  createdAt DateTime  @default(now())
   readAt    DateTime?
 
   @@map("notifications")

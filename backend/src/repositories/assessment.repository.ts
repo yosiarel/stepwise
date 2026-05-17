@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma.js';
+import type { LearningStyle, WorkEnvPreference } from '../../generated/prisma/index.js';
 
 export const findQuestionByKey = async (key: string) => {
   return prisma.assessmentQuestion.findUnique({
@@ -95,17 +96,22 @@ export const upsertUserProfileData = async (
   userId: string,
   data: {
     itInterests:        string[];
-    learningStyle?:     string | null;
-    workEnvPreference?: string | null;
+    learningStyle?:     LearningStyle | null;
+    workEnvPreference?: WorkEnvPreference | null;
     weeklyHours:        number | null;
     itBackground:       boolean | null;
     preferredStudyTime?: string[];
   }
 ) => {
+  // Filter out undefined values to satisfy exactOptionalPropertyTypes: true
+  const cleanData = Object.fromEntries(
+    Object.entries(data).filter(([_, v]) => v !== undefined)
+  ) as any;
+
   return prisma.userProfile.upsert({
     where: { userId },
-    create: { userId, ...data },
-    update: data,
+    create: { userId, ...cleanData },
+    update: cleanData,
   });
 };
 

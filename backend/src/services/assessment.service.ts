@@ -120,8 +120,8 @@ export const completeSessionService = async (userId: string, sessionId: string) 
 
   await repo.upsertUserProfileData(userId, {
     itInterests,
-    learningStyle,
-    workEnvPreference,
+    learningStyle: learningStyle as any,
+    workEnvPreference: workEnvPreference as any,
     weeklyHours,
     itBackground
   });

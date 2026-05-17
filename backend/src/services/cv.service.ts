@@ -188,6 +188,42 @@ export const extractCvService = async (userId: string, cvId: string) => {
 };
 
 
+// ── HELPER MAPPINGS FOR DATABASE ENUMS ─────────────────────────
+import type {
+  EducationLevel,
+  EducationStatus,
+  WorkType,
+} from '../../generated/prisma/index.js';
+
+const mapDegreeToLevel = (degree: string): EducationLevel => {
+  const d = (degree || '').toUpperCase().trim();
+  if (d.includes('S3') || d.includes('DOKTOR')) return 'S3';
+  if (d.includes('S2') || d.includes('MAGISTER')) return 'S2';
+  if (d.includes('S1') || d.includes('SARJANA')) return 'S1';
+  if (d.includes('D4') || d.includes('DIPLOMA 4')) return 'D4';
+  if (d.includes('D3') || d.includes('DIPLOMA 3')) return 'D3';
+  if (d.includes('SMK')) return 'SMK';
+  if (d.includes('SMA') || d.includes('SLTA')) return 'SMA';
+  return 'S1'; // Default fallback
+};
+
+const parseYearGraduated = (year: string): number | null => {
+  const match = (year || '').match(/\b(20\d{2}|19\d{2})\b/g);
+  if (match && match.length > 0) {
+    return parseInt(match[match.length - 1]!, 10);
+  }
+  return null;
+};
+
+const mapRoleToWorkType = (role: string): WorkType => {
+  const r = (role || '').toUpperCase();
+  if (r.includes('INTERN') || r.includes('MAGANG')) return 'MAGANG';
+  if (r.includes('FREELANCE') || r.includes('LEPAS')) return 'FREELANCE';
+  if (r.includes('VOLUNTEER') || r.includes('SUKARELAWAN')) return 'SUKARELAWAN';
+  if (r.includes('IRT') || r.includes('HOUSEWIFE')) return 'IRT';
+  return 'FORMAL'; // Default fallback
+};
+
 export const reviewCvService = async (
   userId: string,
   cvId: string,
@@ -204,19 +240,82 @@ export const reviewCvService = async (
 
   const { educationHistory, workExperiences, extractedSkills } = body;
 
-  const profile = await prisma.userProfile.upsert({
-    where:  { userId },
-    create: {
-      userId,
-      educationHistory: educationHistory as any,
-      workExperiences:  workExperiences as any,
-      extractedSkills,
-    },
-    update: {
-      educationHistory: educationHistory as any,
-      workExperiences:  workExperiences as any,
-      extractedSkills,
-    },
+  const profile = await prisma.$transaction(async (tx) => {
+    // 1. Delete existing education, work experience, and user skills
+    await tx.educationHistory.deleteMany({ where: { userId } });
+    await tx.workExperience.deleteMany({ where: { userId } });
+    await tx.userSkill.deleteMany({ where: { userId } });
+
+    // 2. Insert new Education Histories
+    if (educationHistory && educationHistory.length > 0) {
+      const mappedEducation = educationHistory.map(edu => {
+        const isOngoing = edu.year.toUpperCase().includes('ONGOING') ||
+                          edu.year.toUpperCase().includes('SEKARANG') ||
+                          edu.year.toUpperCase().includes('PRESENT') ||
+                          edu.year.toUpperCase().includes('AKTIF');
+
+        const status: EducationStatus = isOngoing ? 'SEDANG_DITEMPUH' : 'LULUS';
+
+        return {
+          userId,
+          institution: edu.institution || null,
+          level: mapDegreeToLevel(edu.degree),
+          major: edu.major || '',
+          status,
+          yearGraduated: parseYearGraduated(edu.year),
+          semester: isOngoing ? 1 : null,
+        };
+      });
+
+      await tx.educationHistory.createMany({
+        data: mappedEducation,
+      });
+    }
+
+    // 3. Insert new Work Experiences
+    if (workExperiences && workExperiences.length > 0) {
+      const mappedWork = workExperiences.map(work => ({
+        userId,
+        companyName: work.company || null,
+        jobTitle: work.role || '',
+        workType: mapRoleToWorkType(work.role),
+        duration: work.duration || '',
+        description: work.description || null,
+      }));
+
+      await tx.workExperience.createMany({
+        data: mappedWork,
+      });
+    }
+
+    // 4. Insert new Skills in UserSkill (with deduplication)
+    if (extractedSkills && extractedSkills.length > 0) {
+      const uniqueSkills = Array.from(new Set(extractedSkills.map(s => s.trim())))
+        .filter(s => s.length > 0);
+
+      const mappedSkills = uniqueSkills.map(skill => ({
+        userId,
+        name: skill,
+        category: 'TEKNIS' as const,
+        level: 'BEGINNER' as const,
+      }));
+
+      await tx.userSkill.createMany({
+        data: mappedSkills,
+      });
+    }
+
+    // 5. Upsert UserProfile (keeping extractedSkills array as legacy field for compatibility)
+    return tx.userProfile.upsert({
+      where: { userId },
+      create: {
+        userId,
+        extractedSkills: extractedSkills || [],
+      },
+      update: {
+        extractedSkills: extractedSkills || [],
+      },
+    });
   });
 
   await prisma.cvUpload.update({

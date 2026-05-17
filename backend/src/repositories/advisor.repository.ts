@@ -5,7 +5,10 @@ export const buildAdvisorContext = async (userId: string): Promise<AdvisorContex
   const [user, selectedCareer, activeRoadmap, lastEvaluation] = await Promise.all([
     prisma.user.findUnique({
       where:   { id: userId },
-      include: { profile: true },
+      include: {
+        profile: true,
+        skills: true,
+      },
     }),
 
     prisma.careerRecommendation.findFirst({
@@ -71,6 +74,10 @@ export const buildAdvisorContext = async (userId: string): Promise<AdvisorContex
     };
   }
 
+  const extractedSkills = user?.skills && user.skills.length > 0
+    ? user.skills.map(s => s.name)
+    : (user?.profile?.extractedSkills || []);
+
   return {
     user: {
       name:     user?.name ?? 'Pengguna',
@@ -82,7 +89,7 @@ export const buildAdvisorContext = async (userId: string): Promise<AdvisorContex
           itInterests:        user.profile.itInterests,
           weeklyHours:        user.profile.weeklyHours,
           preferredStudyTime: user.profile.preferredStudyTime,
-          extractedSkills:    user.profile.extractedSkills,
+          extractedSkills,
         }
       : null,
     selectedCareer: selectedCareer ?? null,

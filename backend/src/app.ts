@@ -11,6 +11,7 @@ import trackerRouter from './routes/tracker.route.js';
 import evaluationRouter from './routes/evaluation.route.js';
 import advisorRouter from './routes/advisor.route.js';
 import { errorHandler } from './middlewares/error.middleware.js';
+import profileRouter from './routes/profile.route.js';
 
 const app = express();
 
@@ -26,7 +27,17 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    const isLocalhost = origin.startsWith('http://localhost:') ||
+                        origin.startsWith('http://127.0.0.1:') ||
+                        origin === 'http://localhost' ||
+                        origin === 'http://127.0.0.1';
+
+    if (isLocalhost || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -49,6 +60,7 @@ app.use('/api/roadmap', roadmapRouter);
 app.use('/api/tracker', trackerRouter);
 app.use('/api/evaluation', evaluationRouter);
 app.use('/api/advisor', advisorRouter);
+app.use('/api/profile', profileRouter);
 
 app.use(errorHandler);
 

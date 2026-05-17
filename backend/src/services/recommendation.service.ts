@@ -112,7 +112,12 @@ export const getOrGenerateRecommendationService = async (userId: string) => {
 
   const user = await prisma.user.findUnique({
     where:   { id: userId },
-    include: { profile: true },
+    include: {
+      profile: true,
+      educationHistories: true,
+      workExperiences: true,
+      skills: true,
+    },
   });
 
   if (!user?.profile) {
@@ -132,10 +137,10 @@ export const getOrGenerateRecommendationService = async (userId: string) => {
   }
 
   const prompt = buildRecommendationPrompt({
-    educationHistory:   profile.educationHistory,
-    workExperiences:    profile.workExperiences,
+    educationHistory:   user.educationHistories,
+    workExperiences:    user.workExperiences,
     extractedSkills:    profile.extractedSkills,
-    skillLevels:        profile.skillLevels,
+    skillLevels:        user.skills,
     itBackground:       profile.itBackground,
     itInterests:        profile.itInterests,
     learningStyle:      profile.learningStyle,
