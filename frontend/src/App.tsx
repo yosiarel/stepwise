@@ -12,6 +12,9 @@ import AnalysisLoadingPage from './pages/AnalysisLoadingPage';
 import CareerResultsPage from './pages/CareerResultsPage';
 import DashboardPage from './pages/DashboardPage';
 import RoadmapPage from './pages/RoadmapPage';
+import ChecklistPage from './pages/ChecklistPage';
+import DashboardCareerPage from './pages/DashboardCareerPage';
+import AdvisorPage from './pages/AdvisorPage';
 
 function App() {
   return (
@@ -30,8 +33,9 @@ function App() {
         <Route path="/assessment/results" element={<CareerResultsPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/dashboard/roadmap" element={<RoadmapPage />} />
-        
-        
+        <Route path="/dashboard/checklist" element={<ChecklistPage />} />
+        <Route path="/dashboard/career" element={<DashboardCareerPage />} />
+        <Route path="/dashboard/advisor" element={<AdvisorPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -132,7 +132,6 @@ const ProfilingPage = () => {
         </div>
       </main>
 
-      {/* REVISI: Komponen Footer di sini telah dihapus sepenuhnya sesuai protokol UI anti-distraksi funnel onboarding */}
     </div>
   );
 };

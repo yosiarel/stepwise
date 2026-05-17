@@ -240,7 +240,9 @@ const CareerResultsPage = () => {
       <Navbar minimal />
 
       <main className="flex-grow py-10 md:py-16 px-4 md:px-8 pb-32 md:pb-40">
-        <div className="max-w-[1280px] mx-auto">
+        
+        {/* REVISI TAKTIS: Mengubah max-w-[1280px] menjadi lebar bertahap xl & 2xl agar grid 3 rekomendasi profesi memuai proporsional mengisi layar monitor besar */}
+        <div className="w-full max-w-[1280px] xl:max-w-[1440px] 2xl:max-w-[1580px] mx-auto transition-all">
           
           <div className="text-center mb-14 max-w-[850px] mx-auto">
             <h1 className="text-[#1E3A5F] text-[30px] md:text-[38px] font-extrabold leading-tight tracking-tight mb-4">
@@ -338,7 +340,9 @@ const CareerResultsPage = () => {
 
       {/* FLOATING ACTION SELECTION BAR */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] px-4 py-4 z-40">
-        <div className="max-w-[1280px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        
+        {/* REVISI TAKTIS: Menyelaraskan max-w pada kontainer dalam floating bar agar lebarnya simetris dengan konten utama di atas */}
+        <div className="w-full max-w-[1280px] xl:max-w-[1440px] 2xl:max-w-[1580px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-center sm:text-left">
             <div className="w-10 h-10 bg-[#EFF6FF] rounded-xl flex items-center justify-center text-[#3B82F6] shrink-0 hidden sm:flex">
               <Award size={20} />
@@ -370,7 +374,9 @@ const CareerResultsPage = () => {
       {/* MODAL COMPONENT: DETAIL PROFESI */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white w-full max-w-[1100px] rounded-[24px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh] border border-slate-100">
+          
+          {/* REVISI TAKTIS: Menambahkan xl dan 2xl max-w pada pembungkus modal agar tidak tercekik kecil di layar desktop raksasa */}
+          <div className="bg-white w-full max-w-[1100px] xl:max-w-[1200px] 2xl:max-w-[1280px] rounded-[24px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh] border border-slate-100 transition-all">
             
             {/* Modal Header */}
             <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60 shrink-0">

@@ -44,8 +44,8 @@ const LoginPage = () => {
     <div className="min-h-screen bg-white font-sans flex flex-col antialiased">
       <Navbar minimal />
       
-      {/* Spacing konstan py-2xl (64px) sesuai DESIGN.MD */}
-      <main className="flex-grow flex items-center justify-center py-[64px] px-4">
+      {/* PERBAIKAN: Menghapus py-[64px] dan diganti p-4. Flex-grow dan items-center sekarang akan memposisikan kartu tepat di tengah vertikal layar 100% sempurna tanpa memicu scroll. */}
+      <main className="flex-grow flex items-center justify-center p-4">
         <div className="w-full max-w-[440px] bg-white rounded-[12px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] p-10 md:p-12">
           <div className="text-center mb-8">
             <h1 className="text-[#1E3A5F] text-[28px] font-bold leading-tight">Selamat Datang Kembali</h1>

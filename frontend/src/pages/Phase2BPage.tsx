@@ -87,8 +87,10 @@ const Phase2BPage = () => {
     <div className="min-h-screen bg-[#F8F9FF] font-sans flex flex-col antialiased">
       <Navbar minimal />
 
-      <main className="flex-grow py-6 md:py-8 px-4">
-        <div className="max-w-[1000px] mx-auto">
+      <main className="flex-grow py-6 md:py-8 px-4 flex items-center justify-center">
+        
+        {/* REVISI TAKTIS: Menambahkan batas lebar xl dan 2xl yang fluid agar seluruh sekat kategori pemetaan IT melebar proporsional mengikuti monitor desktop raksasa */}
+        <div className="w-full max-w-[1000px] xl:max-w-[1140px] 2xl:max-w-[1240px] mx-auto transition-all">
           
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[#6B7280] hover:text-[#1E3A5F] font-bold text-[13px] mb-4 transition-colors">
             <ChevronLeft size={18} /> Kembali
@@ -100,8 +102,8 @@ const Phase2BPage = () => {
           />
 
           <div className="text-center mb-6">
-            <h2 className="text-[#1E3A5F] text-[22px] md:text-[26px] font-bold leading-tight mb-4 max-w-[750px] mx-auto">
-              {currentQuestion.text}
+            <h2 className="text-[#1E3A5F] text-[22px] md:text-[26px] font-bold leading-tight mb-4 max-w-[750px] xl:max-w-[900px] mx-auto">
+              {currentData.question}
             </h2>
             
             <div className="flex justify-center">
@@ -111,16 +113,42 @@ const Phase2BPage = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {currentQuestion.options.map((opt) => (
-              <OptionCard 
-                key={opt.id}
-                label={opt.label}
-                description={''}
-                isSelected={selectedOptions.includes(opt.value)}
-                onSelect={() => handleSelect(opt.value)}
-              />
-            ))}
+          <div className="mb-6">
+            {currentData.isCategorized ? (
+              <div className="space-y-5">
+                {currentData.categories?.map((cat, idx) => (
+                  <div key={idx} className="space-y-2.5">
+                    <h3 className="text-[#1E3A5F] text-[13px] md:text-[14px] font-bold uppercase tracking-wider border-l-4 border-[#3B82F6] pl-3">
+                      {cat.title}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {cat.items.map((opt) => (
+                        <OptionCard 
+                          key={opt.id}
+                          label={opt.label}
+                          description={opt.desc}
+                          isSelected={selectedOptions.includes(opt.id)}
+                          onSelect={() => handleSelect(opt.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* REVISI TAKTIS: Membuka kuncian max-w pada grid opsi flat via xl:max-w-none agar seimbang */
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-[960px] xl:max-w-none mx-auto">
+                {currentData.options?.map((opt) => (
+                  <OptionCard 
+                    key={opt.id}
+                    label={opt.label}
+                    description={opt.desc}
+                    isSelected={selectedOptions.includes(opt.id)}
+                    onSelect={() => handleSelect(opt.id)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-center border-t border-[#D1D5DB]/50 pt-6">

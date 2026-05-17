@@ -91,8 +91,10 @@ const Phase2APage = () => {
     <div className="min-h-screen bg-[#F8F9FF] font-sans flex flex-col antialiased">
       <Navbar minimal />
 
-      <main className="flex-grow py-6 md:py-8 px-4">
-        <div className="max-w-[960px] mx-auto">
+      <main className="flex-grow py-6 md:py-8 px-4 flex items-center justify-center">
+        
+        {/* REVISI TAKTIS: Mengubah max-w-[960px] menjadi w-full dengan breakpoint xl dan 2xl agar grid opsi memuai proporsional di layar monitor desktop besar */}
+        <div className="w-full max-w-[960px] xl:max-w-[1140px] 2xl:max-w-[1240px] mx-auto transition-all">
           
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[#6B7280] hover:text-[#1E3A5F] font-bold text-[13px] mb-4 transition-colors">
             <ChevronLeft size={18} /> Kembali
@@ -104,8 +106,8 @@ const Phase2APage = () => {
           />
 
           <div className="text-center mb-6">
-            <h2 className="text-[#1E3A5F] text-[22px] md:text-[26px] font-bold leading-tight mb-4 max-w-[750px] mx-auto">
-              {currentQuestion.text}
+            <h2 className="text-[#1E3A5F] text-[22px] md:text-[26px] font-bold leading-tight mb-4 max-w-[750px] xl:max-w-[900px] mx-auto">
+              {currentData.question}
             </h2>
             
             <div className="flex justify-center">

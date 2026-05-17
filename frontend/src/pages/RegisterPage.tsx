@@ -92,7 +92,8 @@ const RegisterPage = () => {
     <div className="min-h-screen bg-white font-sans flex flex-col antialiased">
       <Navbar minimal />
       
-      <main className="flex-grow flex items-center justify-center py-[64px] px-4">
+      {/* PERBAIKAN TAKTIS: Mengubah py-[64px] menjadi p-4 agar perataan vertikal flexbox bekerja 100% akurat di layar besar tanpa memicu scrollbar serangga */}
+      <main className="flex-grow flex items-center justify-center p-4">
         <div className="w-full max-w-[480px] bg-white rounded-[12px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] p-10 md:p-12 border border-gray-50">
           <div className="text-center mb-8">
             <h1 className="text-[#1E3A5F] text-[28px] font-bold leading-tight">Buat Akun Baru</h1>
