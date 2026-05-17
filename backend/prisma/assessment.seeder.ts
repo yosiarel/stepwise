@@ -4,6 +4,8 @@ async function main() {
   console.log('⚡ Menjalankan Seeder Pertanyaan Asesmen StepWise...');
 
   // Bersihkan data lama untuk menghindari duplikasi / constraint error
+  await prisma.assessmentAnswer.deleteMany();
+  await prisma.assessmentSession.deleteMany();
   await prisma.assessmentOption.deleteMany();
   await prisma.assessmentQuestion.deleteMany();
 

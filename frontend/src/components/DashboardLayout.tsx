@@ -14,6 +14,7 @@ import {
   X
 } from 'lucide-react';
 import Footer from './Footer';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -22,6 +23,7 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuthStore();
 
   const [isDesktopExpanded, setIsDesktopExpanded] = useState<boolean>(true); 
   const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false); 
@@ -62,13 +64,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         )}
 
         <div className={`p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center ${isExpanded ? 'gap-3' : 'justify-center'}`}>
-          <div className="w-9 h-9 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center font-bold text-[14px] shrink-0">
-            H
+          <div className="w-9 h-9 rounded-full bg-[#1E3A5F] text-white flex items-center justify-center font-bold text-[14px] shrink-0 uppercase">
+            {user?.name ? user.name.charAt(0) : 'U'}
           </div>
           {isExpanded && (
             <div className="overflow-hidden animate-fadeIn">
-              <h4 className="text-[#1E3A5F] text-[13px] font-black truncate">Harry Telaumbanua</h4>
-              <span className="text-slate-400 text-[11px] font-medium block">Tech Student</span>
+              <h4 className="text-[#1E3A5F] text-[13px] font-black truncate">{user?.name || 'Talenta Hebat'}</h4>
+              <span className="text-slate-400 text-[11px] font-medium block truncate">{user?.email || 'Tech Student'}</span>
             </div>
           )}
         </div>

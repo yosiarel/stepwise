@@ -102,10 +102,10 @@ export const completeSessionService = async (userId: string, sessionId: string) 
   ];
   
   // Gaya Belajar & Lingkungan Kerja
-  const learningStyle = answerMap['FASE3_2'] ?? null;
-  const workEnvPreference = answerMap['FASE3_3'] ?? null;
+  const learningStyle = answerMap['FASE3_1'] ?? null;
+  const workEnvPreference = answerMap['FASE3_2'] ?? null;
 
-  const weeklyHoursRaw = answerMap['FASE3_5'] ?? null;
+  const weeklyHoursRaw = answerMap['FASE3_4'] ?? null;
   const weeklyHoursMap: Record<string, number> = {
     '<5':   3,
     '5-10':  7,
