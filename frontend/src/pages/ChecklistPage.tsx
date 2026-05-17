@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -9,9 +9,13 @@ import {
   PlayCircle,
   FileText,
   Code,
-  Check
+  Check,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
+import roadmapService from '../services/roadmapService';
+import type { RoadmapMaterial as BackendMaterial } from '../types/roadmap';
 
 type MaterialType = 'Video' | 'Artikel' | 'Praktik';
 
@@ -34,43 +38,103 @@ interface WeekData {
 const ChecklistPage = () => {
   const navigate = useNavigate();
 
-  // Dataset Mockup yang direstrukturisasi menjadi daftar Mingguan (tanpa pengelompokan hari)
-  const [weeks, setWeeks] = useState<WeekData[]>([
-    {
-      weekNumber: 3,
-      topic: "Dasar JavaScript",
-      description: "Pahami konsep inti JavaScript seperti variabel, tipe data, dan logika kontrol.",
-      isLocked: false,
-      tasks: [
-        { id: "w3-t1", title: "Variabel & Tipe Data JS", duration: "1 jam", type: "Video", completed: true },
-        { id: "w3-t2", title: "Operasi Aritmatika", duration: "30 menit", type: "Artikel", completed: true }
-      ]
-    },
-    {
-      weekNumber: 4,
-      topic: "Layouting & Responsive Design",
-      description: "Kuasai teknik pengaturan tata letak modern dengan Flexbox dan Grid, serta pastikan antarmuka Anda terlihat sempurna di berbagai ukuran layar.",
-      isLocked: false,
-      tasks: [
-        { id: "w4-t1", title: "CSS Flexbox Deep Dive", duration: "2 jam", type: "Video", completed: true },
-        { id: "w4-t2", title: "Membangun Navigasi dengan Flexbox", duration: "1.5 jam", type: "Artikel", completed: true },
-        { id: "w4-t3", title: "CSS Grid Mastery", duration: "3 jam", type: "Video", completed: false },
-        { id: "w4-t4", title: "Responsive Breakpoints & Media Queries", duration: "1 jam", type: "Artikel", completed: false },
-        { id: "w4-t5", title: "Mini Project: Layout Dashboard Responsive", duration: "4 jam", type: "Praktik", completed: false }
-      ]
-    },
-    {
-      weekNumber: 5,
-      topic: "Async JavaScript & APIs",
-      description: "Pelajari cara mengambil data dari server dan menangani proses asinkronus.",
-      isLocked: true,
-      tasks: []
-    }
-  ]);
+  // State Manajemen Data Backend
+  const [weeks, setWeeks] = useState<WeekData[]>([]);
+  const [currentWeekNum, setCurrentWeekNum] = useState<number>(1);
+  const [professionTitle, setProfessionTitle] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const [currentWeekNum, setCurrentWeekNum] = useState<number>(4);
+  // Fungsi mentransformasikan list flat dari backend ke format mingguan lokal
+  const transformMaterialsToWeeks = (materials: BackendMaterial[]): WeekData[] => {
+    if (!materials || materials.length === 0) return [];
 
-  // PERBAIKAN LOGIKA NAVIGASI MINGGU BERDASARKAN INDEX ARRAY
+    // Urutkan berdasarkan urutan pembelajaran asli
+    const sorted = [...materials].sort((a, b) => a.order - b.order);
+    const minTime = new Date(sorted[0].scheduledAt).getTime();
+
+    // Kelompokkan ke dalam interval 7 hari berdasarkan scheduledAt
+    const grouped: { [key: number]: BackendMaterial[] } = {};
+    sorted.forEach(m => {
+      const mTime = new Date(m.scheduledAt).getTime();
+      const diffDays = Math.max(0, Math.floor((mTime - minTime) / (1000 * 60 * 60 * 24)));
+      const weekNum = Math.floor(diffDays / 7) + 1;
+
+      if (!grouped[weekNum]) {
+        grouped[weekNum] = [];
+      }
+      grouped[weekNum].push(m);
+    });
+
+    // Petakan ke format WeekData yang siap dikonsumsi UI
+    return Object.keys(grouped)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((weekNum, index) => {
+        const tasksInWeek = grouped[weekNum];
+        const firstTask = tasksInWeek[0];
+        const phaseLabel = firstTask.phase;
+
+        // Racik topik dan deskripsi dinamis dari materi teratas minggu ini
+        const cleanTopic = firstTask.title.split(' untuk ')[0] || firstTask.title;
+        const topic = `${phaseLabel}: ${cleanTopic}`;
+        const description = firstTask.description || `Fase ${phaseLabel} untuk mendalami kompetensi utama dan keterampilan spesifik yang relevan dengan standar industri kerja.`;
+
+        return {
+          weekNumber: index + 1,
+          topic,
+          description,
+          isLocked: false,
+          tasks: tasksInWeek.map(t => {
+            const types: MaterialType[] = ['Video', 'Artikel', 'Praktik'];
+            const type = types[t.order % types.length];
+
+            const durations = ['1 jam', '1.5 jam', '2 jam', '45 menit', '3 jam'];
+            const duration = durations[t.order % durations.length];
+
+            return {
+              id: t.id,
+              title: t.title,
+              duration,
+              type,
+              completed: t.isCompleted
+            };
+          })
+        };
+      });
+  };
+
+  // PENGAMBILAN DATA DARI BACKEND
+  useEffect(() => {
+    const fetchActiveRoadmap = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await roadmapService.getActiveRoadmap();
+        setProfessionTitle(data.professionTitle);
+        
+        const transformedWeeks = transformMaterialsToWeeks(data.materials);
+        setWeeks(transformedWeeks);
+
+        if (transformedWeeks.length > 0) {
+          const activeWeek = transformedWeeks.find(w => w.tasks.some(t => !t.completed)) || transformedWeeks[0];
+          setCurrentWeekNum(activeWeek.weekNumber);
+        }
+      } catch (err) {
+        console.error('Error fetching checklist roadmap:', err);
+        // SOLUSI ESLINT: Lakukan type assertion ke bentuk struktur response Axios tanpa menggunakan kata 'any'
+        const axiosError = err as { response?: { data?: { message?: string } } };
+        setError(axiosError.response?.data?.message || 'Belum ada kurikulum roadmap yang aktif. Silakan pilih target karier terlebih dahulu.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchActiveRoadmap();
+  }, []);
+
+  // Selektor navigasi minggu berdasarkan index array
   const currentWeekIndex = useMemo(() => {
     return weeks.findIndex(w => w.weekNumber === currentWeekNum);
   }, [weeks, currentWeekNum]);
@@ -79,31 +143,53 @@ const ChecklistPage = () => {
   const hasNextWeek = currentWeekIndex < weeks.length - 1;
   const isNextLocked = hasNextWeek ? weeks[currentWeekIndex + 1].isLocked : false;
 
-  // Mendapatkan data minggu yang sedang aktif (fallback aman)
-  const currentWeekData = weeks[currentWeekIndex] || weeks[0];
+  const currentWeekData = weeks[currentWeekIndex] || null;
 
-  // Menghitung Progress Mingguan
+  // Menghitung Progress Mingguan secara reaktif
   const { totalTasks, completedTasks, progressPercentage } = useMemo(() => {
+    if (!currentWeekData) return { totalTasks: 0, completedTasks: 0, progressPercentage: 0 };
     const total = currentWeekData.tasks.length;
     const completed = currentWeekData.tasks.filter(t => t.completed).length;
     const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
     return { totalTasks: total, completedTasks: completed, progressPercentage: percentage };
   }, [currentWeekData]);
 
-  // Handler: Centang Tugas
-  const handleToggleTask = (taskId: string) => {
-    setWeeks(prevWeeks => prevWeeks.map(week => {
-      if (week.weekNumber === currentWeekNum) {
-        const newTasks = week.tasks.map(task => 
-          task.id === taskId ? { ...task, completed: !task.completed } : task
-        );
-        return { ...week, tasks: newTasks };
-      }
-      return week;
-    }));
+  // HANDLER: Klik / Centang Tugas terintegrasi API PATCH
+  const handleToggleTask = async (taskId: string) => {
+    if (!currentWeekData) return;
+
+    const targetedTask = currentWeekData.tasks.find(t => t.id === taskId);
+    if (!targetedTask) return;
+
+    if (targetedTask.completed) {
+      setToastMessage("Materi ini sudah selesai dipelajari! 👍");
+      setTimeout(() => setToastMessage(null), 3500);
+      return;
+    }
+
+    try {
+      await roadmapService.completeMaterial(taskId);
+      
+      setWeeks(prevWeeks => prevWeeks.map(week => {
+        if (week.weekNumber === currentWeekNum) {
+          const newTasks = week.tasks.map(task => 
+            task.id === taskId ? { ...task, completed: true } : task
+          );
+          return { ...week, tasks: newTasks };
+        }
+        return week;
+      }));
+
+      setToastMessage("Sukses memperbarui progres belajarmu! 🎉");
+      setTimeout(() => setToastMessage(null), 4000);
+    } catch (err) {
+      console.error('Gagal memperbarui progres:', err);
+      // SOLUSI ESLINT: Lakukan type assertion ke bentuk struktur response Axios tanpa menggunakan kata 'any'
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      alert(axiosError.response?.data?.message || 'Gagal menandai materi sebagai selesai. Coba lagi nanti.');
+    }
   };
 
-  // Handler: Navigasi Minggu yang Sudah Diperbaiki
   const handlePrevWeek = () => {
     if (hasPrevWeek) {
       setCurrentWeekNum(weeks[currentWeekIndex - 1].weekNumber);
@@ -116,7 +202,6 @@ const ChecklistPage = () => {
     }
   };
 
-  // Fungsi pembantu untuk render ikon berdasarkan tipe materi
   const getTypeIcon = (type: MaterialType) => {
     switch (type) {
       case 'Video': return <PlayCircle size={14} />;
@@ -126,17 +211,48 @@ const ChecklistPage = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="w-full h-[60vh] flex flex-col items-center justify-center gap-3 text-slate-400">
+          <Loader2 size={36} className="animate-spin text-[#1E3A5F]" />
+          <span className="text-[14px] font-bold">Menyelaraskan kurikulum belajarmu...</span>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error || !currentWeekData) {
+    return (
+      <DashboardLayout>
+        <div className="w-full max-w-md mx-auto h-[60vh] flex flex-col items-center justify-center text-center p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <AlertCircle size={44} className="text-amber-500 mb-4 animate-bounce" />
+          <h3 className="text-[#1E3A5F] text-[16px] font-black mb-1">Kurikulum Aktif Tidak Ditemukan</h3>
+          <p className="text-slate-400 text-[13px] font-medium leading-relaxed mb-5">
+            {error || 'Sistem belum mendeteksi adanya roadmap yang aktif untuk akun Anda saat ini.'}
+          </p>
+          <button 
+            onClick={() => navigate('/dashboard/career')}
+            className="h-10 px-5 bg-[#1E3A5F] hover:bg-[#152A44] text-white text-[13px] font-bold rounded-xl transition-all shadow-md cursor-pointer"
+          >
+            Lihat Rekomendasi Karier
+          </button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
-      <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto transition-all">
+      <div className="w-full max-w-[1000px] xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto transition-all relative">
         
         {/* ACTION BAR ATAS */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 xl:mb-8">
           <button 
             onClick={() => navigate('/dashboard/roadmap')}
-            className="flex items-center gap-2 text-slate-500 hover:text-[#1E3A5F] font-bold text-[13.5px] transition-colors w-fit"
+            className="flex items-center gap-2 text-slate-500 hover:text-[#1E3A5F] font-bold text-[13.5px] transition-colors w-fit cursor-pointer"
           >
-            <ArrowLeft size={18} /> Kembali ke Roadmap
+            <ArrowLeft size={18} /> Kembali ke Roadmap ({professionTitle})
           </button>
 
           {/* Navigasi Minggu */}
@@ -144,18 +260,18 @@ const ChecklistPage = () => {
             <button 
               onClick={handlePrevWeek}
               disabled={!hasPrevWeek}
-              className="w-8 h-8 xl:w-9 xl:h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-slate-600"
+              className="w-8 h-8 xl:w-9 xl:h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-slate-600 cursor-pointer"
             >
               <ChevronLeft size={20} />
             </button>
             <span className="text-[#1E3A5F] font-extrabold text-[13.5px] xl:text-[14.5px] px-2">
-              Minggu {currentWeekNum}
+              Minggu {currentWeekData.weekNumber}
             </span>
             <button 
               onClick={handleNextWeek}
               disabled={!hasNextWeek || isNextLocked}
               title={isNextLocked ? "Minggu ini masih terkunci" : "Minggu Selanjutnya"}
-              className="w-8 h-8 xl:w-9 xl:h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-slate-600"
+              className="w-8 h-8 xl:w-9 xl:h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors text-slate-600 cursor-pointer"
             >
               {isNextLocked ? <Lock size={16} /> : <ChevronRight size={20} />}
             </button>
@@ -206,7 +322,7 @@ const ChecklistPage = () => {
             {currentWeekData.tasks.length === 0 ? (
               <div className="p-10 text-center text-slate-400">
                 <Lock size={32} className="mx-auto mb-3 opacity-50" />
-                <p>Materi minggu ini masih terkunci.</p>
+                <p>Materi minggu ini masih kosong atau terkunci.</p>
               </div>
             ) : (
               currentWeekData.tasks.map((task) => (
@@ -217,7 +333,6 @@ const ChecklistPage = () => {
                     task.completed ? 'bg-emerald-50/30' : 'hover:bg-slate-50'
                   }`}
                 >
-                  {/* Checkbox Persegi */}
                   <div className={`mt-1 w-[22px] h-[22px] shrink-0 rounded flex items-center justify-center transition-colors border ${
                     task.completed 
                       ? 'bg-[#10B981] border-[#10B981] text-white' 
@@ -226,9 +341,8 @@ const ChecklistPage = () => {
                     {task.completed && <Check size={14} strokeWidth={3} />}
                   </div>
                   
-                  {/* Konten Tugas */}
-                  <div className="flex flex-col gap-1.5">
-                    <h4 className={`text-[15px] xl:text-[16px] font-bold transition-colors duration-200 ${
+                  <div className="flex flex-col gap-1.5 min-w-0 flex-grow">
+                    <h4 className={`text-[15px] xl:text-[16px] font-bold transition-colors duration-200 break-words ${
                       task.completed ? 'text-slate-400 line-through' : 'text-[#1E3A5F]'
                     }`}>
                       {task.title}
@@ -251,6 +365,14 @@ const ChecklistPage = () => {
             )}
           </div>
         </div>
+
+        {/* TOAST CONFIRMATION */}
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 bg-emerald-600 text-white px-5 py-3 rounded-xl shadow-xl font-bold text-[13px] tracking-wide animate-slideInRight z-50 flex items-center gap-2 border border-emerald-500 max-w-[80vw]">
+            <Check size={16} strokeWidth={3} className="shrink-0" /> 
+            <span className="truncate">{toastMessage}</span>
+          </div>
+        )}
 
       </div>
     </DashboardLayout>

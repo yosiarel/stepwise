@@ -15,6 +15,10 @@ import RoadmapPage from './pages/RoadmapPage';
 import ChecklistPage from './pages/ChecklistPage';
 import DashboardCareerPage from './pages/DashboardCareerPage';
 import AdvisorPage from './pages/AdvisorPage';
+import EvaluationPage from './pages/EvaluationPage';
+import ProfilePage from './pages/ProfilePage';
+import NotFoundPage from './pages/NotFoundPage';
+import ServerErrorPage from './pages/ServerErrorPage';
 
 function App() {
   return (
@@ -36,6 +40,10 @@ function App() {
         <Route path="/dashboard/checklist" element={<ChecklistPage />} />
         <Route path="/dashboard/career" element={<DashboardCareerPage />} />
         <Route path="/dashboard/advisor" element={<AdvisorPage />} />
+        <Route path="/dashboard/evaluation" element={<EvaluationPage />} />
+        <Route path="/dashboard/profile" element={<ProfilePage />} />
+        <Route path="/500" element={<ServerErrorPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );

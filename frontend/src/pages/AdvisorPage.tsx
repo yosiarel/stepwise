@@ -14,7 +14,7 @@ import {
   Loader2
 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
-import advisorService from '../services/advisorService'; //
+import advisorService from '../services/advisorService';
 
 interface LocalMessage {
   id: string;
@@ -22,6 +22,7 @@ interface LocalMessage {
   text: string;
   time: string;
   proposal?: {
+    id: string; // ID proposal dari database untuk eksekusi API
     type: 'SCHEDULE_SPEED' | 'ADD_MATERIAL' | 'CHANGE_CAREER' | 'REORDER_MATERIAL';
     description: string;
     status: 'pending' | 'approved' | 'rejected';
@@ -45,7 +46,6 @@ const AdvisorPage = () => {
   
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // PERBAIKAN: State Utama menggunakan nama 'sessions' secara konsisten
   const [sessions, setSessions] = useState<ChatSession[]>([
     { id: 'session-current', title: 'Sesi Diskusi Aktif', date: 'Hari ini', active: true }
   ]);
@@ -63,14 +63,14 @@ const AdvisorPage = () => {
     const loadChatHistory = async () => {
       try {
         setIsLoadingHistory(true);
-        const backendHistory = await advisorService.getHistory(); //
+        const backendHistory = await advisorService.getHistory();
         
-        if (backendHistory.length > 0) {
+        if (backendHistory && backendHistory.length > 0) {
           const mappedMessages: LocalMessage[] = backendHistory.map((msg, index) => ({
             id: `hist-${index}-${Date.now()}`,
-            sender: msg.role === 'user' ? 'user' : 'ai',
+            sender: (msg.role === 'user') ? 'user' : 'ai',
             text: msg.content,
-            time: 'Saved'
+            time: 'Tersimpan'
           }));
           setMessages(mappedMessages);
         } else {
@@ -85,6 +85,15 @@ const AdvisorPage = () => {
         }
       } catch (error) {
         console.error('Gagal mengambil histori chat:', error);
+        // Fallback jika terjadi error koneksi awal
+        setMessages([
+          {
+            id: 'init-msg',
+            sender: 'ai',
+            text: 'Halo! Selamat datang kembali. Berdiskusi denganku mengenai rencana belajar atau perubahan target karier IT kapan saja.',
+            time: 'Aktif'
+          }
+        ]);
       } finally {
         setIsLoadingHistory(false);
       }
@@ -106,6 +115,7 @@ const AdvisorPage = () => {
     scrollToBottom();
   }, [messages, isSending]);
 
+  // HANDLER: Mengirim Pesan Baru ke AI
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || isSending) return;
@@ -125,16 +135,17 @@ const AdvisorPage = () => {
     
     try {
       setIsSending(true);
-      const responseData = await advisorService.sendMessage(userRawText); //
+      const responseData = await advisorService.sendMessage(userRawText);
       
       const aiMessage: LocalMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
-        text: responseData.reply, //
+        text: responseData.reply,
         time: currentTimeStr,
         proposal: responseData.proposal ? {
-          type: responseData.proposal.type, //
-          description: responseData.proposal.description, //
+          id: responseData.proposal.id,
+          type: responseData.proposal.type,
+          description: responseData.proposal.description,
           status: 'pending'
         } : undefined
       };
@@ -147,7 +158,7 @@ const AdvisorPage = () => {
         {
           id: `err-${Date.now()}`,
           sender: 'ai',
-          text: 'Maaf, koneksi ke otak AI terputus. Silakan periksa server backend Anda atau coba kirim kembali.',
+          text: 'Maaf, koneksi menuju pusat kecerdasan AI terputus. Harap periksa jaringan internet atau server backend Anda.',
           time: 'Error'
         }
       ]);
@@ -156,7 +167,6 @@ const AdvisorPage = () => {
     }
   };
 
-  // PERBAIKAN: Fungsi penyeleksi riwayat kini memperbarui state 'sessions' dengan benar
   const handleSelectHistory = (id: string) => {
     setSessions(prev => prev.map(item => ({ ...item, active: item.id === id })));
     if (window.innerWidth < 768) {
@@ -164,10 +174,11 @@ const AdvisorPage = () => {
     }
   };
 
+  // HANDLER: Reset Sesi Percakapan Baru
   const handleNewChat = async () => {
     try {
       setIsSending(true);
-      await advisorService.clearHistory(); //
+      await advisorService.clearHistory();
       
       setSessions(prev => [
         { id: `session-${Date.now()}`, title: 'Sesi Diskusi Baru', date: 'Baru saja', active: true },
@@ -178,7 +189,7 @@ const AdvisorPage = () => {
         {
           id: `init-${Date.now()}`,
           sender: 'ai',
-          text: 'Sesi percakapan baru telah dimulai. Silakan utarakan kendala belajar, target baru, atau minta evaluasi kesiapan kerja pada saya!',
+          text: 'Sesi percakapan baru telah berhasil dimulai. Silakan utarakan kendala belajar, target baru, atau minta evaluasi kesiapan kerja pada saya!',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
@@ -188,23 +199,45 @@ const AdvisorPage = () => {
       }
     } catch (error) {
       console.error('Gagal mereset sesi chat:', error);
-      alert('Gagal memulai sesi baru. Pastikan koneksi server aman.');
+      alert('Gagal memulai sesi baru. Pastikan koneksi server backend berjalan normal.');
     } finally {
       setIsSending(false);
     }
   };
 
-  const handleSuggestionAction = (messageId: string, action: 'approve' | 'reject', description?: string) => {
-    setMessages(prevMessages => prevMessages.map(msg => {
-      if (msg.id === messageId && msg.proposal) {
-        return { ...msg, proposal: { ...msg.proposal, status: action === 'approve' ? 'approved' : 'rejected' } };
-      }
-      return msg;
-    }));
+  // HANDLER INTERAKTIF: Kirim Keputusan Proposal ke Database Berdasarkan ID
+  const handleSuggestionAction = async (messageId: string, action: 'approve' | 'reject', proposalId?: string, description?: string) => {
+    if (!proposalId) {
+      alert('ID proposal tidak valid atau tidak terdeteksi oleh sistem.');
+      return;
+    }
 
-    if (action === 'approve' && description) {
-      setToastMessage(`Sukses menyetujui: ${description}`);
-      setTimeout(() => setToastMessage(null), 4000);
+    try {
+      const decisionParam = action === 'approve' ? 'APPROVED' : 'REJECTED';
+      
+      // Tembak keputusan ke backend untuk memicu adaptasi sistem otomatis
+      await advisorService.respondToProposal(proposalId, decisionParam);
+
+      // Sinkronisasikan perubahan status di local state secara instan
+      setMessages(prevMessages => prevMessages.map(msg => {
+        if (msg.id === messageId && msg.proposal) {
+          return { ...msg, proposal: { ...msg.proposal, status: action === 'approve' ? 'approved' : 'rejected' } };
+        }
+        return msg;
+      }));
+
+      if (action === 'approve' && description) {
+        setToastMessage(`Sukses menyetujui perubahan: ${description}`);
+        setTimeout(() => setToastMessage(null), 4000);
+      } else {
+        setToastMessage("Usulan perubahan kurikulum berhasil ditolak.");
+        setTimeout(() => setToastMessage(null), 3000);
+      }
+    } catch (error) {
+      console.error('Gagal memproses keputusan proposal:', error);
+      // Assertion error ramah linter
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      alert(axiosError.response?.data?.message || 'Gagal mengirimkan keputusan ke server. Silakan coba kembali.');
     }
   };
 
@@ -228,7 +261,7 @@ const AdvisorPage = () => {
             <button 
               onClick={handleNewChat}
               disabled={isSending || isLoadingHistory}
-              className="h-[38px] xl:h-[42px] bg-white border border-slate-200 hover:border-[#3B82F6] text-[#1E3A5F] hover:text-[#3B82F6] disabled:opacity-50 font-bold text-[12.5px] xl:text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm shrink-0 w-full"
+              className="h-[38px] xl:h-[42px] bg-white border border-slate-200 hover:border-[#3B82F6] text-[#1E3A5F] hover:text-[#3B82F6] disabled:opacity-50 font-bold text-[12.5px] xl:text-[13px] rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm shrink-0 w-full cursor-pointer"
             >
               <Plus size={16} />
               {isHistoryExpanded && <span className="truncate">Mulai Chat Baru</span>}
@@ -240,14 +273,13 @@ const AdvisorPage = () => {
               </span>
             )}
 
-            {/* PERBAIKAN: Melakukan perulangan murni dari state 'sessions' yang ter-type kuat (Menghilangkan implicit any) */}
             <div className="flex flex-col gap-1 w-full">
               {sessions.map((chat) => (
                 <button
                   key={chat.id}
                   disabled={isLoadingHistory}
                   onClick={() => handleSelectHistory(chat.id)}
-                  className={`w-full p-2.5 xl:p-3 rounded-xl flex flex-col gap-1 text-left transition-all overflow-hidden ${
+                  className={`w-full p-2.5 xl:p-3 rounded-xl flex flex-col gap-1 text-left transition-all overflow-hidden cursor-pointer ${
                     chat.active ? 'bg-[#EFF6FF] text-[#3B82F6]' : 'text-slate-600 hover:bg-slate-100/70'
                   } ${!isHistoryExpanded && 'items-center justify-center'}`}
                 >
@@ -271,7 +303,7 @@ const AdvisorPage = () => {
 
           <button 
             onClick={() => setIsHistoryExpanded(!isHistoryExpanded)}
-            className="hidden md:flex w-full h-10 xl:h-11 border-t border-slate-200/60 items-center justify-center text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-100/50 transition-colors bg-slate-50 shrink-0"
+            className="hidden md:flex w-full h-10 xl:h-11 border-t border-slate-200/60 items-center justify-center text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-100/50 transition-colors bg-slate-50 shrink-0 cursor-pointer"
           >
             {isHistoryExpanded ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
           </button>
@@ -284,7 +316,7 @@ const AdvisorPage = () => {
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => setIsHistoryExpanded(true)}
-                className="md:hidden p-2 -ml-2 text-slate-400 hover:text-slate-600 bg-slate-50 rounded-lg"
+                className="md:hidden p-2 -ml-2 text-slate-400 hover:text-slate-600 bg-slate-50 rounded-lg cursor-pointer"
               >
                 <Menu size={18} />
               </button>
@@ -346,16 +378,16 @@ const AdvisorPage = () => {
                               {msg.proposal.status === 'pending' ? (
                                 <>
                                   <button 
-                                    onClick={() => handleSuggestionAction(msg.id, 'approve', msg.proposal?.description)}
-                                    className="h-7 md:h-8 px-3.5 md:px-4 bg-[#1E3A5F] hover:bg-[#152A44] text-white text-[11px] md:text-[11.5px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-sm shadow-[#1E3A5F]/10 shrink-0"
+                                    onClick={() => handleSuggestionAction(msg.id, 'approve', msg.proposal?.id, msg.proposal?.description)}
+                                    className="h-7 md:h-8 px-3.5 md:px-4 bg-[#1E3A5F] hover:bg-[#152A44] text-white text-[11px] md:text-[11.5px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-sm shadow-[#1E3A5F]/10 shrink-0 cursor-pointer"
                                   >
                                     <Check size={13} strokeWidth={3} /> Setujui Perubahan
                                   </button>
                                   <button 
-                                    onClick={() => handleSuggestionAction(msg.id, 'reject')}
-                                    className="h-7 md:h-8 px-3.5 md:px-4 bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-500 border border-slate-200 hover:border-rose-200 text-[11px] md:text-[11.5px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-sm shrink-0"
+                                    onClick={() => handleSuggestionAction(msg.id, 'reject', msg.proposal?.id)}
+                                    className="h-7 md:h-8 px-3.5 md:px-4 bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-500 border border-slate-200 hover:border-rose-200 text-[11px] md:text-[11.5px] font-bold rounded-lg transition-colors flex items-center gap-1 shadow-sm shrink-0 cursor-pointer"
                                   >
-                                    <X size={13} strokeWidth={3} /> Tolak Usulan
+                                    <X size={13} strokeWidth={3} /> Usulan Ditolak
                                   </button>
                                 </>
                               ) : (
@@ -401,7 +433,7 @@ const AdvisorPage = () => {
               <button 
                 type="button" 
                 onClick={() => alert("Mengunggah lampiran berkas pendukung kurikulum...")}
-                className="w-7 h-7 xl:w-8 xl:h-8 rounded-lg text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-200/50 flex items-center justify-center transition-colors shrink-0"
+                className="w-7 h-7 xl:w-8 xl:h-8 rounded-lg text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-200/50 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
               >
                 <Paperclip size={16} className="xl:w-[18px] xl:h-[18px]" />
               </button>
@@ -418,7 +450,7 @@ const AdvisorPage = () => {
               <button 
                 type="submit"
                 disabled={!inputText.trim() || isSending || isLoadingHistory}
-                className="w-7 h-7 xl:w-8 xl:h-8 rounded-lg bg-[#1E3A5F] hover:bg-[#152A44] disabled:bg-slate-200 text-white disabled:text-slate-400 flex items-center justify-center transition-colors shrink-0 shadow-sm"
+                className="w-7 h-7 xl:w-8 xl:h-8 rounded-lg bg-[#1E3A5F] hover:bg-[#152A44] disabled:bg-slate-200 text-white disabled:text-slate-400 flex items-center justify-center transition-colors shrink-0 shadow-sm cursor-pointer"
               >
                 <Send size={14} className="xl:w-[15px] xl:h-[15px] ml-0.5" />
               </button>
