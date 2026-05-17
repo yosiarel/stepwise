@@ -23,7 +23,7 @@ const advisorService = {
   },
 
   async sendMessage(message: string): Promise<AdvisorResponse> {
-    const response = await axiosInstance.post('/advisor/message', { message });
+    const response = await axiosInstance.post('/advisor/chat', { message });
     return response.data.data;
   },
 
