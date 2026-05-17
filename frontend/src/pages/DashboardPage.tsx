@@ -21,6 +21,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import trackerService from '../services/trackerService';
 import roadmapService from '../services/roadmapService';
 import careerService from '../services/careerService';
+import evaluationService from '../services/evaluationService';
 
 interface WeeklyTask {
   id: string;
@@ -40,7 +41,7 @@ const DashboardPage = () => {
   // Data Terintegrasi
   const [trackerSummary, setTrackerSummary] = useState<any>(null);
   const [tasks, setTasks] = useState<WeeklyTask[]>([]);
-  const [showEvalBanner, setShowEvalBanner] = useState<boolean>(true);
+  const [showEvalBanner, setShowEvalBanner] = useState<boolean>(false);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
@@ -66,6 +67,15 @@ const DashboardPage = () => {
         // Ambil maksimal 4 target materi untuk minggu ini
         const listToShow = [...incomplete, ...completed].slice(0, 4);
         setTasks(listToShow as WeeklyTask[]);
+      }
+
+      // Ambil data evaluasi tertunda dari backend
+      try {
+        const pendingEval = await evaluationService.getPending();
+        setShowEvalBanner(!!pendingEval);
+      } catch (evalErr) {
+        console.warn('Gagal memuat status evaluasi tertunda:', evalErr);
+        setShowEvalBanner(false);
       }
     } catch (err: any) {
       // Jika 404 (belum ada roadmap aktif), cek apakah pengguna sudah memilih karir target

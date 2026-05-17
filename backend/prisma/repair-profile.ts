@@ -1,23 +1,19 @@
 import { prisma } from '../src/lib/prisma.js';
+import { completeSessionService } from '../src/services/assessment.service.js';
 
 async function main() {
-  console.log('🔧 Memulai proses perbaikan profil pengguna...');
+  console.log('🔧 Memulai proses pemulihan dan sinkronisasi kuesioner menggantung...');
 
-  // Ambil semua profil pengguna yang weeklyHours-nya null
-  const profiles = await prisma.userProfile.findMany({
-    where: {
-      weeklyHours: null,
-    },
-  });
+  // Ambil semua profil pengguna
+  const profiles = await prisma.userProfile.findMany({});
 
-  console.log(`Menemukan ${profiles.length} profil yang memerlukan perbaikan...`);
+  console.log(`Menganalisis ${profiles.length} profil pengguna untuk disinkronkan...`);
 
   for (const profile of profiles) {
-    // Cari sesi kuesioner terakhir yang selesai
+    // Cari sesi kuesioner terakhir apa pun statusnya
     const session = await prisma.assessmentSession.findFirst({
       where: {
         userId: profile.userId,
-        status: 'COMPLETED',
       },
       include: {
         answers: true,
@@ -28,33 +24,36 @@ async function main() {
     });
 
     if (session) {
-      const answer = session.answers.find((a) => a.questionKey === 'FASE3_4');
-      if (answer) {
-        const weeklyHoursMap: Record<string, number> = {
-          '<5':   3,
-          '5-10':  7,
-          '10-20': 15,
-          '>20':  25,
-        };
-        const weeklyHours = weeklyHoursMap[answer.answerValue] ?? null;
-        if (weeklyHours) {
-          await prisma.userProfile.update({
-            where: { id: profile.id },
-            data: { weeklyHours },
+      console.log(`\n👤 Menganalisis Sesi ${session.id} untuk userId: ${profile.userId}`);
+      console.log(`   - Status saat ini di DB: ${session.status}`);
+      console.log(`   - Jumlah jawaban tersimpan: ${session.answers.length}`);
+
+      const hasFase34 = session.answers.some((a) => a.questionKey === 'FASE3_4');
+
+      if (hasFase34) {
+        console.log(`   💡 Ditemukan jawaban FASE3_4 (Jam Belajar). Memulai penyelesaian otomatis...`);
+        try {
+          // Panggil service penyelesaian resmi agar data terpetakan secara lengkap dan valid!
+          const result = await completeSessionService(profile.userId, session.id);
+          console.log(`   ✓ SUKSES: Sesi berhasil diselesaikan! Detail: ${result.message}`);
+
+          // Opsional: Double check apakah weeklyHours sudah terisi
+          const updatedProfile = await prisma.userProfile.findUnique({
+            where: { userId: profile.userId }
           });
-          console.log(`✓ Sukses memperbaiki profil untuk userId ${profile.userId} menjadi ${weeklyHours} jam.`);
-        } else {
-          console.log(`⚠️ Jawaban FASE3_4 ditemukan (${answer.answerValue}) tapi tidak terpetakan.`);
+          console.log(`   ✓ Hasil Profil Baru: weeklyHours = ${updatedProfile?.weeklyHours} jam`);
+        } catch (err: any) {
+          console.error(`   ❌ GAGAL menyelesaikan sesi:`, err.message || err);
         }
       } else {
-        console.log(`⚠️ Jawaban FASE3_4 tidak ditemukan pada sesi untuk userId ${profile.userId}.`);
+        console.log(`   ⚠️ Jawaban FASE3_4 belum diisi. Pengguna harus menyelesaikan kuesioner terlebih dahulu.`);
       }
     } else {
-      console.log(`⚠️ Sesi kuesioner selesai tidak ditemukan untuk userId ${profile.userId}.`);
+      console.log(`   ⚠️ Sesi kuesioner tidak ditemukan sama sekali untuk userId: ${profile.userId}`);
     }
   }
 
-  console.log('🏁 Proses perbaikan profil selesai.');
+  console.log('\n🏁 Proses pemulihan selesai.');
 }
 
 main()
