@@ -26,10 +26,19 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { accessToken, refreshToken, user } = await loginService(req.body);
+    const { accessToken, refreshToken, refreshJwt, user } = await loginService(req.body);
 
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, refreshToken);
+
+    const IS_PROD = process.env.NODE_ENV === 'production';
+    res.cookie('refresh_jwt', refreshJwt, {
+      httpOnly: true,
+      secure: IS_PROD,
+      sameSite: IS_PROD ? 'none' : 'lax', 
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/api/auth',
+    });
 
     res.status(200).json({
       message: 'Login berhasil',
@@ -56,10 +65,11 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
     setAccessTokenCookie(res, accessToken);
     setRefreshTokenCookie(res, newRawToken);
     
+    const IS_PROD = process.env.NODE_ENV === 'production';
     res.cookie('refresh_jwt', newRefreshJwt, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      secure: IS_PROD,
+      sameSite: IS_PROD ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/api/auth',
     });

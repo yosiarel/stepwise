@@ -59,6 +59,7 @@ export const loginService = async (body: LoginBody) => {
   return {
     accessToken,
     refreshToken: rawRefreshToken, 
+    refreshJwt: refreshToken, 
     user: { id: user.id, name: user.name, email: user.email, category: user.category },
   };
 };
