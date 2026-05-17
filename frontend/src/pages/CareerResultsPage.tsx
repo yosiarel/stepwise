@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; 
-import { Eye, Check, ArrowRight, Award, X, Briefcase, Building, TrendingUp } from 'lucide-react';
+import { Eye, Check, ArrowRight, Award, X, Briefcase, Building, TrendingUp, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import careerService from '../services/careerService';
 
 interface IntegratedSkill {
   name: string;
@@ -24,84 +25,159 @@ interface ProfessionCard {
   integratedSkills: IntegratedSkill[];
 }
 
+const mockRecommendations: ProfessionCard[] = [
+  {
+    id: 'frontend',
+    title: 'Frontend Developer',
+    description: 'Membangun dan mengoptimalkan komponen antarmuka web yang interaktif, responsif, serta memastikan kenyamanan pengalaman pengguna akhir secara visual.',
+    readiness: 85,
+    reason: 'Kecocokan yang sangat kuat berdasarkan pemahaman dasar HTML, CSS, dan JavaScript kamu saat ini. Fokus mendalami modern framework serta manajemen state akan mempercepat kesiapan kerjamu menuju level profesional industri.',
+    skillsHave: ['HTML/CSS', 'JavaScript', 'Git'], 
+    skillsGap: ['React/Vue', 'State Management'],
+    responsibilities: [
+      'Mentransformasikan mockup desain UI/UX (Figma) menjadi kode web yang bersih, modular, dan interaktif.',
+      'Mengintegrasikan API (Application Programming Interface) untuk pertukaran data yang dinamis.',
+      'Mengoptimalkan performa kecepatan loading aplikasi web dan memastikan fungsionalitas lintas browser.'
+    ],
+    companyTypes: ['Tech Companies (Mapan)', 'Tech Startups', 'Digital Agencies', 'E-commerce Platforms'],
+    outlook: 'Kebutuhan talenta sangat tinggi seiring transformasi digital global. Jalur karier mapan menuju Senior Developer, Tech Lead, hingga Engineering Manager.',
+    integratedSkills: [
+      { name: 'State Management', currentLevel: null, targetLevel: 'Intermediate', status: 'new' },
+      { name: 'React/Vue', currentLevel: 'Beginner', targetLevel: 'Advanced', status: 'upgrade' },
+      { name: 'HTML/CSS', currentLevel: 'Advanced', targetLevel: 'Advanced', status: 'matching' },
+      { name: 'JavaScript', currentLevel: 'Intermediate', targetLevel: 'Intermediate', status: 'matching' }, 
+      { name: 'Git', currentLevel: 'Beginner', targetLevel: 'Beginner', status: 'matching' }
+    ]
+  },
+  {
+    id: 'uiux',
+    title: 'UI/UX Designer',
+    description: 'Merancang alur arsitektur informasi, pengalaman eksplorasi produk, serta visualisasi antarmuka aplikasi digital agar intuitif, bernilai guna, dan estetik.',
+    readiness: 70,
+    reason: 'Kemampuan desain visual, estetika, dan empati pengguna kamu sudah sangat solid. Memperdalam metodologi riset pengguna (user research) serta pembuatan purwarupa interaktif akan melengkapi portofolio emasmu.',
+    skillsHave: ['Figma', 'Visual Design'],
+    skillsGap: ['User Research', 'Prototyping'],
+    responsibilities: [
+      'Melakukan riset pengguna (wawancara, survei) untuk memahami kebutuhan masalah nyata target audiens.',
+      'Menyusun wireframe, user flow, dan purwarupa (prototype) interaktif untuk keperluan pengujian produk.',
+      'Merancang sistem desain visual (komponen, tipografi, warna) yang konsisten dan modern.'
+    ],
+    companyTypes: ['Product Startups', 'IT Consultancies', 'Digital Design Studios', 'Korporat Multinasional'],
+    outlook: 'Sangat krusial bagi retensi pengguna produk digital. Peluang karier meluas menjadi Senior Designer, Lead UX Researcher, hingga Product Manager.',
+    integratedSkills: [
+      { name: 'User Research', currentLevel: null, targetLevel: 'Intermediate', status: 'new' },
+      { name: 'Prototyping', currentLevel: 'Beginner', targetLevel: 'Advanced', status: 'upgrade' },
+      { name: 'Figma', currentLevel: 'Intermediate', targetLevel: 'Intermediate', status: 'matching' },
+      { name: 'Visual Design', currentLevel: 'Advanced', targetLevel: 'Advanced', status: 'matching' }
+    ]
+  },
+  {
+    id: 'data-analyst',
+    title: 'Data Analyst',
+    description: 'Mengolah, mengekstrak, dan memvalidasi sekumpulan dataset mentah menjadi laporan analisis bisnis yang mudah dipahami guna mendukung pengambilan keputusan.',
+    readiness: 60,
+    reason: 'Memiliki fondasi berpikir logis, analitis, dan sistematis yang kuat dari hobi olah datamu. Kamu hanya memerlukan pelatihan terstruktur pada penguerian database relasional serta penguasaan tools visualisasi data mutakhir.',
+    skillsHave: ['Excel', 'Analytical Logic'],
+    skillsGap: ['SQL', 'Python/R', 'Tableau'],
+    responsibilities: [
+      'Mengekstrak dan memfilter data dari berbagai database relational menggunakan query SQL terstruktur.',
+      'Melakukan pembersihan data (data cleaning) untuk menjaga validitas and akurasi metrik bisnis.',
+      'Membangun dashboard visualisasi data interaktif untuk monitoring performa bisnis berkala.'
+    ],
+    companyTypes: ['Fintech & Perbankan', 'FMCG / Korporat Ritel', 'Business Consultancies', 'Data Center & Telekomunikasi'],
+    outlook: 'Era Big Data menuntut setiap bisnis mengambil keputusan berbasis data. Prospek karier cerah menuju Senior Analyst, Analytics Manager, atau transisi ke Data Scientist.',
+    integratedSkills: [
+      { name: 'SQL', currentLevel: null, targetLevel: 'Advanced', status: 'new' },
+      { name: 'Tableau', currentLevel: null, targetLevel: 'Intermediate', status: 'new' },
+      { name: 'Python/R', currentLevel: 'Beginner', targetLevel: 'Intermediate', status: 'upgrade' },
+      { name: 'Excel', currentLevel: 'Advanced', targetLevel: 'Advanced', status: 'matching' },
+      { name: 'Analytical Logic', currentLevel: 'Advanced', targetLevel: 'Advanced', status: 'matching' }
+    ]
+  }
+];
+
 const CareerResultsPage = () => {
   const navigate = useNavigate(); 
+  const [recommendations, setRecommendations] = useState<ProfessionCard[]>(mockRecommendations);
   const [selectedId, setSelectedId] = useState<string>('frontend');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [modalData, setModalData] = useState<ProfessionCard>(mockRecommendations[0]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSelecting, setIsSelecting] = useState<boolean>(false);
 
-  const recommendations: ProfessionCard[] = [
-    {
-      id: 'frontend',
-      title: 'Frontend Developer',
-      description: 'Membangun dan mengoptimalkan komponen antarmuka web yang interaktif, responsif, serta memastikan kenyamanan pengalaman pengguna akhir secara visual.',
-      readiness: 85,
-      reason: 'Kecocokan yang sangat kuat berdasarkan pemahaman dasar HTML, CSS, dan JavaScript kamu saat ini. Fokus mendalami modern framework serta manajemen state akan mempercepat kesiapan kerjamu menuju level profesional industri.',
-      skillsHave: ['HTML/CSS', 'JavaScript', 'Git'], 
-      skillsGap: ['React/Vue', 'State Management'],
-      responsibilities: [
-        'Mentransformasikan mockup desain UI/UX (Figma) menjadi kode web yang bersih, modular, dan interaktif.',
-        'Mengintegrasikan API (Application Programming Interface) untuk pertukaran data yang dinamis.',
-        'Mengoptimalkan performa kecepatan loading aplikasi web dan memastikan fungsionalitas lintas browser.'
-      ],
-      companyTypes: ['Tech Companies (Mapan)', 'Tech Startups', 'Digital Agencies', 'E-commerce Platforms'],
-      outlook: 'Kebutuhan talenta sangat tinggi seiring transformasi digital global. Jalur karier mapan menuju Senior Developer, Tech Lead, hingga Engineering Manager.',
-      integratedSkills: [
-        { name: 'State Management', currentLevel: null, targetLevel: 'Intermediate', status: 'new' },
-        { name: 'React/Vue', currentLevel: 'Beginner', targetLevel: 'Advanced', status: 'upgrade' },
-        { name: 'HTML/CSS', currentLevel: 'Advanced', targetLevel: 'Advanced', status: 'matching' },
-        { name: 'JavaScript', currentLevel: 'Intermediate', targetLevel: 'Intermediate', status: 'matching' }, 
-        { name: 'Git', currentLevel: 'Beginner', targetLevel: 'Beginner', status: 'matching' }
-      ]
-    },
-    {
-      id: 'uiux',
-      title: 'UI/UX Designer',
-      description: 'Merancang alur arsitektur informasi, pengalaman eksplorasi produk, serta visualisasi antarmuka aplikasi digital agar intuitif, bernilai guna, dan estetik.',
-      readiness: 70,
-      reason: 'Kemampuan desain visual, estetika, dan empati pengguna kamu sudah sangat solid. Memperdalam metodologi riset pengguna (user research) serta pembuatan purwarupa interaktif akan melengkapi portofolio emasmu.',
-      skillsHave: ['Figma', 'Visual Design'],
-      skillsGap: ['User Research', 'Prototyping'],
-      responsibilities: [
-        'Melakukan riset pengguna (wawancara, survei) untuk memahami kebutuhan masalah nyata target audiens.',
-        'Menyusun wireframe, user flow, dan purwarupa (prototype) interaktif untuk keperluan pengujian produk.',
-        'Merancang sistem desain visual (komponen, tipografi, warna) yang konsisten dan modern.'
-      ],
-      companyTypes: ['Product Startups', 'IT Consultancies', 'Digital Design Studios', 'Korporat Multinasional'],
-      outlook: 'Sangat krusial bagi retensi pengguna produk digital. Peluang karier meluas menjadi Senior Designer, Lead UX Researcher, hingga Product Manager.',
-      integratedSkills: [
-        { name: 'User Research', currentLevel: null, targetLevel: 'Intermediate', status: 'new' },
-        { name: 'Prototyping', currentLevel: 'Beginner', targetLevel: 'Advanced', status: 'upgrade' },
-        { name: 'Figma', currentLevel: 'Intermediate', targetLevel: 'Intermediate', status: 'matching' },
-        { name: 'Visual Design', currentLevel: 'Advanced', targetLevel: 'Advanced', status: 'matching' }
-      ]
-    },
-    {
-      id: 'data-analyst',
-      title: 'Data Analyst',
-      description: 'Mengolah, mengekstrak, dan memvalidasi sekumpulan dataset mentah menjadi laporan analisis bisnis yang mudah dipahami guna mendukung pengambilan keputusan.',
-      readiness: 60,
-      reason: 'Memiliki fondasi berpikir logis, analitis, dan sistematis yang kuat dari hobi olah datamu. Kamu hanya memerlukan pelatihan terstruktur pada penguerian database relasional serta penguasaan tools visualisasi data mutakhir.',
-      skillsHave: ['Excel', 'Analytical Logic'],
-      skillsGap: ['SQL', 'Python/R', 'Tableau'],
-      responsibilities: [
-        'Mengekstrak dan memfilter data dari berbagai database relational menggunakan query SQL terstruktur.',
-        'Melakukan pembersihan data (data cleaning) untuk menjaga validitas and akurasi metrik bisnis.',
-        'Membangun dashboard visualisasi data interaktif untuk monitoring performa bisnis berkala.'
-      ],
-      companyTypes: ['Fintech & Perbankan', 'FMCG / Korporat Ritel', 'Business Consultancies', 'Data Center & Telekomunikasi'],
-      outlook: 'Era Big Data menuntut setiap bisnis mengambil keputusan berbasis data. Prospek karier cerah menuju Senior Analyst, Analytics Manager, atau transisi ke Data Scientist.',
-      integratedSkills: [
-        { name: 'SQL', currentLevel: null, targetLevel: 'Advanced', status: 'new' },
-        { name: 'Tableau', currentLevel: null, targetLevel: 'Intermediate', status: 'new' },
-        { name: 'Python/R', currentLevel: 'Beginner', targetLevel: 'Intermediate', status: 'upgrade' },
-        { name: 'Excel', currentLevel: 'Advanced', targetLevel: 'Advanced', status: 'matching' },
-        { name: 'Analytical Logic', currentLevel: 'Advanced', targetLevel: 'Advanced', status: 'matching' }
-      ]
-    }
-  ];
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      try {
+        setIsLoading(true);
+        console.log('Mengambil rekomendasi karier dari backend...');
+        const response = await careerService.getRecommendations();
+        console.log('Rekomendasi berhasil diambil:', response);
+        
+        if (response && response.recommendations && response.recommendations.length > 0) {
+          const mapped: ProfessionCard[] = response.recommendations.map((rec: any) => {
+            // Pemetaan status skill
+            const mappedSkills: IntegratedSkill[] = rec.skills.map((s: any) => {
+              let status: 'matching' | 'upgrade' | 'new' = 'new';
+              if (s.currentLevel === s.targetLevel) {
+                status = 'matching';
+              } else if (s.currentLevel !== null) {
+                status = 'upgrade';
+              }
+              
+              // Standardisasi tipe level string
+              const capitalize = (str: string | null) => {
+                if (!str) return null;
+                return (str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()) as any;
+              };
 
-  const currentSelectedProfession = recommendations.find(p => p.id === selectedId);
-  const [modalData, setModalData] = useState<ProfessionCard>(recommendations[0]);
+              return {
+                name: s.skillName,
+                currentLevel: capitalize(s.currentLevel),
+                targetLevel: capitalize(s.targetLevel) || 'Beginner',
+                status
+              };
+            });
+
+            const skillsHave = mappedSkills
+              .filter(s => s.status === 'matching' || s.status === 'upgrade')
+              .map(s => s.name);
+            
+            const skillsGap = mappedSkills
+              .filter(s => s.status === 'new')
+              .map(s => s.name);
+
+            return {
+              id: rec.id,
+              title: rec.professionTitle,
+              description: rec.professionOverview?.longTermProspect || rec.reasonSummary,
+              readiness: rec.readinessPercent || 50,
+              reason: rec.reasonSummary,
+              skillsHave: skillsHave.length > 0 ? skillsHave : ['Dasar IT'],
+              skillsGap: skillsGap.length > 0 ? skillsGap : ['Modul Spesifik'],
+              responsibilities: rec.professionOverview?.dailyTasks || ['Mempelajari konsep baru', 'Melakukan praktik mandiri'],
+              companyTypes: rec.professionOverview?.companyTypes || ['Tech Startups', 'Digital Agencies'],
+              outlook: rec.professionOverview?.longTermProspect || 'Permintaan pasar sangat tinggi dan menjanjikan.',
+              integratedSkills: mappedSkills
+            };
+          });
+
+          setRecommendations(mapped);
+          setSelectedId(mapped[0].id);
+          setModalData(mapped[0]);
+        }
+      } catch (err) {
+        console.error('Gagal mengambil rekomendasi karier, menggunakan fallback mock data:', err);
+        // Tetap menggunakan mockRecommendations
+        setRecommendations(mockRecommendations);
+        setSelectedId(mockRecommendations[0].id);
+        setModalData(mockRecommendations[0]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -119,17 +195,45 @@ const CareerResultsPage = () => {
     };
   }, [isModalOpen]);
 
+  const currentSelectedProfession = recommendations.find(p => p.id === selectedId);
+
   const handleOpenModal = (prof: ProfessionCard) => {
     setModalData(prof);
     setIsModalOpen(true);
   };
 
-  const handleSelectProfession = () => {
-    if (currentSelectedProfession) {
-      console.log("Profesi yang dipilih final:", currentSelectedProfession.title);
+  const handleSelectProfession = async () => {
+    if (!selectedId) return;
+    
+    setIsSelecting(true);
+    try {
+      console.log('Menyimpan target karier yang dipilih:', selectedId);
+      await careerService.selectCareer(selectedId);
+      console.log('Target karier berhasil disimpan!');
+      
+      // Arahkan ke dashboard setelah berhasil disimpan
       navigate('/dashboard'); 
+    } catch (error) {
+      console.error('Gagal memilih target karier:', error);
+      alert('Gagal menyimpan target karier. Mengarahkan langsung ke dashboard.');
+      navigate('/dashboard');
+    } finally {
+      setIsSelecting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FF] font-sans flex flex-col antialiased">
+        <Navbar minimal />
+        <main className="flex-grow flex flex-col items-center justify-center p-4">
+          <Loader2 className="animate-spin text-[#1E3A5F] mb-4" size={48} />
+          <h3 className="text-[#1E3A5F] text-[18px] font-bold">Meracik Rekomendasi Karier Terbaik Anda...</h3>
+          <p className="text-[#6B7280] text-[14px] mt-2">AI kami sedang menganalisis profil dan minat belajar Anda.</p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FF] font-sans flex flex-col antialiased">
@@ -195,7 +299,7 @@ const CareerResultsPage = () => {
                       <div>
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Skills You Have</span>
                         <div className="flex flex-wrap gap-1.5">
-                          {prof.skillsHave.map((sk, i) => (
+                          {prof.skillsHave.slice(0, 4).map((sk, i) => (
                             <span key={i} className="bg-[#EFF6FF] text-[#3B82F6] text-[11px] font-bold px-2.5 py-1 rounded-md border border-[#DBEAFE]">
                               {sk}
                             </span>
@@ -206,7 +310,7 @@ const CareerResultsPage = () => {
                       <div>
                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Skill Gaps</span>
                         <div className="flex flex-wrap gap-1.5">
-                          {prof.skillsGap.map((sg, i) => (
+                          {prof.skillsGap.slice(0, 4).map((sg, i) => (
                             <span key={i} className="bg-[#FFFBEB] text-[#D97706] text-[11px] font-bold px-2.5 py-1 rounded-md border border-[#FEF3C7]">
                               {sg}
                             </span>
@@ -247,9 +351,18 @@ const CareerResultsPage = () => {
 
           <button
             onClick={handleSelectProfession}
-            className="w-full sm:w-auto h-[50px] px-8 bg-[#1E3A5F] hover:bg-[#152A44] text-white font-bold text-[15px] rounded-[12px] flex items-center justify-center gap-2 shadow-lg shadow-[#1E3A5F]/10 transition-all active:scale-95"
+            disabled={isSelecting}
+            className="w-full sm:w-auto h-[50px] px-8 bg-[#1E3A5F] hover:bg-[#152A44] disabled:bg-[#D1D5DB] text-white font-bold text-[15px] rounded-[12px] flex items-center justify-center gap-2 shadow-lg shadow-[#1E3A5F]/10 transition-all active:scale-95"
           >
-            Pilih Profesi Ini & Buat Roadmap <ArrowRight size={16} />
+            {isSelecting ? (
+              <>
+                <Loader2 className="animate-spin" size={16} /> Menyimpan...
+              </>
+            ) : (
+              <>
+                Pilih Profesi Ini & Buat Roadmap <ArrowRight size={16} />
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -284,7 +397,6 @@ const CareerResultsPage = () => {
               {/* KOLOM KIRI: Ringkasan Umum (Col-span 7) */}
               <div className="md:col-span-7 space-y-6">
                 
-                {/* REVISI UTAMA: Penyelarasan Judul Biru dan Style Konten Border Kiri Tanpa Box */}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <span className="text-[11px] font-bold text-[#3B82F6] uppercase tracking-widest block">Deskripsi</span>

@@ -9,6 +9,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const setAuth = useAuthStore(state => state.setAuth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -19,16 +20,20 @@ const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    const setAuth = useAuthStore(state => state.setAuth);
 
     try {
+      console.log('Memulai proses login untuk:', email);
       const response = await authService.login({
         email,
         password,
       });
+      console.log('Login berhasil, respons:', response);
+      
       setAuth(response.data);
+      console.log('Auth state diupdate, mengarahkan ke dashboard...');
       navigate('/dashboard');
     } catch (err: any) {
+      console.error('Login error detail:', err);
       setError(err.response?.data?.message || 'Email atau Kata Sandi salah.');
     } finally {
       setIsLoading(false);

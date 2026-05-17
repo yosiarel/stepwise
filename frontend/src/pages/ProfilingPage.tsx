@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronLeft } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-// REVISI: Di-comment agar tidak memicu error linter karena tidak lagi digunakan
-// import Footer from '../components/Footer';
 import ProgressBar from '../components/assessment/ProgressBar';
 import OptionCard from '../components/assessment/OptionCard';
+import { useAssessmentStore } from '../store/useAssessmentStore';
+import assessmentService from '../services/assessmentService';
 
 const ProfilingPage = () => {
   const navigate = useNavigate();
+  const { setSessionId, setCurrentQuestion } = useAssessmentStore();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const options = [
     {
@@ -34,11 +36,35 @@ const ProfilingPage = () => {
     }
   ];
 
-  const handleContinue = () => {
-    if (selectedOption === 'C' || selectedOption === 'D') {
-      navigate('/assessment/phase-2-b'); // Masuk ke Jalur Teknis
-    } else {
-      navigate('/assessment/phase-2-a'); // Masuk ke Jalur Non-Teknis
+  const handleContinue = async () => {
+    if (!selectedOption) return;
+    
+    setIsLoading(true);
+    try {
+      // 1. Mulai Asesmen
+      const startRes = await assessmentService.startAssessment();
+      setSessionId(startRes.sessionId);
+      
+      // 2. Submit Jawaban FASE1
+      const answerRes = await assessmentService.submitAnswer({
+        sessionId: startRes.sessionId,
+        questionKey: 'FASE1',
+        answerValue: selectedOption
+      });
+
+      setCurrentQuestion(answerRes.nextQuestion);
+
+      // 3. Routing berdasarkan pilihan (A/B -> 2A, C/D -> 2B)
+      if (selectedOption === 'C' || selectedOption === 'D') {
+        navigate('/assessment/phase-2-b');
+      } else {
+        navigate('/assessment/phase-2-a');
+      }
+    } catch (error) {
+      console.error('Gagal memulai asesmen:', error);
+      alert('Terjadi kesalahan saat memulai asesmen. Silakan coba lagi.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -85,14 +111,22 @@ const ProfilingPage = () => {
           <div className="flex justify-center border-t border-[#D1D5DB]/50 pt-6">
             <button
               onClick={handleContinue}
-              disabled={!selectedOption}
+              disabled={!selectedOption || isLoading}
               className={`h-[52px] px-10 rounded-[8px] font-bold text-[16px] flex items-center gap-2 transition-all ${
-                selectedOption 
+                selectedOption && !isLoading
                 ? 'bg-[#1E3A5F] text-white hover:bg-[#152A44] shadow-lg active:scale-95' 
                 : 'bg-[#D1D5DB] text-white cursor-not-allowed'
               }`}
             >
-              Lanjutkan <ArrowRight size={18} />
+              {isLoading ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} /> Memproses...
+                </>
+              ) : (
+                <>
+                  Lanjutkan <ArrowRight size={18} />
+                </>
+              )}
             </button>
           </div>
         </div>

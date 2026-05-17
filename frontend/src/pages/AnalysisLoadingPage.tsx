@@ -1,17 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import assessmentService from '../services/assessmentService';
+import { useAssessmentStore } from '../store/useAssessmentStore';
 
 const AnalysisLoadingPage = () => {
   const navigate = useNavigate();
+  const { sessionId, resetAssessment } = useAssessmentStore();
+  const hasCompleted = useRef(false);
 
   useEffect(() => {
-    // Simulasi loading 4 detik sebelum pindah ke halaman hasil rekomendasi
-    const timer = setTimeout(() => {
-      navigate('/assessment/results');
-    }, 4000);
+    const processAnalysis = async () => {
+      if (!sessionId || hasCompleted.current) return;
+      hasCompleted.current = true;
 
-    return () => clearTimeout(timer);
-  }, [navigate]);
+      try {
+        console.log('Menyelesaikan asesmen dan memulai analisis AI...');
+        await assessmentService.completeAssessment(sessionId);
+        
+        // Setelah selesai, beri jeda sedikit agar user bisa melihat animasi
+        setTimeout(() => {
+          resetAssessment(); // Bersihkan store asesmen
+          navigate('/assessment/results');
+        }, 2000);
+      } catch (error) {
+        console.error('Gagal menyelesaikan asesmen:', error);
+        alert('Terjadi kesalahan saat menganalisis profil Anda. Silakan coba lagi dari Dashboard.');
+        navigate('/dashboard');
+      }
+    };
+
+    processAnalysis();
+  }, [sessionId, navigate, resetAssessment]);
 
   return (
     <div className="min-h-screen bg-gradient-to-tr from-[#EBF2FF] to-[#F3F7FF] flex flex-col items-center justify-center p-4 antialiased">

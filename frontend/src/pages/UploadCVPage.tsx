@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Upload, AlertCircle } from 'lucide-react';
+import { Upload, AlertCircle, Loader2, ArrowRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import cvService from '../services/cvService';
 
 const UploadCVPage = () => {
   const navigate = useNavigate();
@@ -10,10 +11,16 @@ const UploadCVPage = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // States untuk Upload & Ekstraksi AI
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<'uploading' | 'extracting' | 'error'>('uploading');
+  const [errorMsg, setErrorMsg] = useState('');
+
   // Handle pilihan file
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
+      setErrorMsg('');
     }
   };
 
@@ -30,23 +37,94 @@ const UploadCVPage = () => {
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setSelectedFile(e.dataTransfer.files[0]);
+      setErrorMsg('');
+    }
+  };
+
+  const handleUploadAndExtract = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    setErrorMsg('');
+    setUploadStatus('uploading');
+
+    try {
+      // 1. Upload CV PDF ke Backend
+      console.log('Mengunggah CV ke Cloudinary via Backend...');
+      const uploadRes = await cvService.uploadCv(selectedFile);
+      const cvId = uploadRes.id;
+      console.log('CV berhasil diunggah dengan ID:', cvId);
+
+      // 2. Ekstrak data menggunakan AI
+      setUploadStatus('extracting');
+      console.log('Memulai ekstraksi AI Nvidia...');
+      const extractRes = await cvService.extractCv(cvId);
+      console.log('Ekstraksi berhasil! Data:', extractRes);
+
+      // 3. Arahkan ke Halaman Verifikasi dengan data hasil ekstraksi
+      navigate('/verify-data', { 
+        state: { 
+          cvId, 
+          extractedInfo: extractRes.extractedData 
+        } 
+      });
+
+    } catch (err: any) {
+      console.error('Gagal memproses CV:', err);
+      setUploadStatus('error');
+      setErrorMsg(err.response?.data?.message || 'Gagal memproses CV Anda. Pastikan CV merupakan file PDF berbasis teks (bukan hasil scan/gambar) dan coba lagi.');
+    }
+  };
+
+  const handleManualEntry = async () => {
+    setIsUploading(true);
+    setErrorMsg('');
+    setUploadStatus('uploading');
+
+    try {
+      // Membuat file PDF dummy berukuran mini yang valid
+      const dummyBlob = new Blob(["StepWise Manual User Profile Entry"], { type: "application/pdf" });
+      const dummyFile = new File([dummyBlob], "profil_manual.pdf", { type: "application/pdf" });
+
+      console.log('Menyiapkan lembar profil baru...');
+      const uploadRes = await cvService.uploadCv(dummyFile);
+      const cvId = uploadRes.id;
+      
+      console.log('Lembar profil berhasil disiapkan dengan ID:', cvId);
+      
+      // Arahkan ke Halaman Verifikasi dengan data kosong/dummy
+      navigate('/verify-data', { 
+        state: { 
+          cvId, 
+          extractedInfo: null 
+        } 
+      });
+    } catch (err: any) {
+      console.error('Gagal menyiapkan lembar profil manual:', err);
+      // Fallback aman
+      navigate('/verify-data');
+    } finally {
+      setIsUploading(false);
     }
   };
 
   return (
-    /* PERBAIKAN: Menggunakan bg-[#F8F9FF] untuk latar belakang halaman */
     <div className="min-h-screen bg-[#F8F9FF] font-sans flex flex-col antialiased">
       <Navbar minimal />
 
-      <main className="flex-grow flex items-center justify-center py-[64px] px-4">
-        {/* Card tetap bg-white agar kontras dengan latar belakang F8F9FF */}
-        <div className="w-full max-w-[720px] bg-white rounded-[12px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] p-10 md:p-12">
+      <main className="flex-grow flex items-center justify-center py-[64px] px-4 relative">
+        
+        {/* Card Utama */}
+        <div className="w-full max-w-[720px] bg-white rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-10 md:p-12 border border-slate-100">
           
           {/* Header Section */}
           <div className="text-center mb-10">
-            <h1 className="text-[#1E3A5F] text-[28px] font-bold leading-tight">Langkah Pertama: Unggah CV Kamu</h1>
-            <p className="text-[#6B7280] text-[16px] mt-3">
-              Biarkan AI kami menganalisis latar belakang pendidikan dan pengalamanmu untuk memberikan rekomendasi yang paling akurat.
+            <span className="inline-flex items-center px-3.5 py-1 bg-[#EFF6FF] text-[#3B82F6] text-[11px] font-extrabold rounded-full border border-[#DBEAFE] uppercase tracking-widest mb-3">
+              Langkah Pertama
+            </span>
+            <h1 className="text-[#1E3A5F] text-[28px] md:text-[32px] font-black leading-tight tracking-tight">Unggah CV Terbaik Kamu</h1>
+            <p className="text-[#6B7280] text-[14px] md:text-[15px] mt-3 font-medium leading-relaxed max-w-[550px] mx-auto">
+              Biarkan asisten AI kami menganalisis riwayat pendidikan dan pengalamanmu untuk merekomendasikan bidang IT yang paling akurat.
             </p>
           </div>
 
@@ -55,19 +133,19 @@ const UploadCVPage = () => {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`relative border-2 border-dashed rounded-[12px] p-12 flex flex-col items-center justify-center transition-all ${
-              isDragging ? 'border-[#3B82F6] bg-[#3B82F6]/5' : 'border-[#D1D5DB] bg-[#F9FAFB]'
+            className={`relative border-2 border-dashed rounded-[20px] p-12 flex flex-col items-center justify-center transition-all ${
+              isDragging ? 'border-[#3B82F6] bg-[#3B82F6]/5 scale-[0.99]' : 'border-slate-200 bg-slate-50/50 hover:border-[#3B82F6]/50'
             }`}
           >
-            <div className="w-16 h-16 bg-[#EFF4FF] text-[#3B82F6] rounded-full flex items-center justify-center mb-6">
-              <Upload size={32} />
+            <div className="w-16 h-16 bg-[#EFF6FF] text-[#3B82F6] rounded-2xl flex items-center justify-center mb-6 shadow-sm shadow-[#3B82F6]/10">
+              <Upload size={28} />
             </div>
 
-            <div className="text-center space-y-2 mb-8">
-              <p className="text-[18px] font-semibold text-[#1F2937]">
-                {selectedFile ? selectedFile.name : 'Seret & Lepas file CV kamu di sini atau klik untuk mencari'}
+            <div className="text-center space-y-2 mb-8 max-w-[480px]">
+              <p className="text-[16px] md:text-[18px] font-extrabold text-[#1E3A5F] tracking-tight">
+                {selectedFile ? selectedFile.name : 'Seret & Lepas file CV Anda di sini'}
               </p>
-              <p className="text-[14px] text-[#6B7280]">Format yang didukung: PDF (Maks. 5MB)</p>
+              <p className="text-[13px] text-slate-400 font-bold">Format berkas didukung: PDF saja (Maks. 5MB)</p>
             </div>
 
             <input 
@@ -81,45 +159,89 @@ const UploadCVPage = () => {
             <button 
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="px-6 h-[44px] border border-[#D1D5DB] bg-white rounded-[8px] text-[#1E3A5F] font-bold hover:bg-[#F3F4F6] transition-all shadow-sm"
+              className="px-6 h-[44px] border border-slate-200 bg-white rounded-xl text-[#1E3A5F] font-bold text-[13px] hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
             >
-              {selectedFile ? 'Ganti File' : 'Pilih File'}
+              {selectedFile ? 'Ganti File CV' : 'Pilih Berkas PDF'}
             </button>
           </div>
 
+          {/* Error Message Alert Card */}
+          {errorMsg && (
+            <div className="mt-6 bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3 animate-fadeIn">
+              <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={18} />
+              <div>
+                <h4 className="text-red-800 text-[13.5px] font-bold">Gagal memproses dokumen</h4>
+                <p className="text-red-600 text-[12.5px] font-medium mt-0.5 leading-relaxed">{errorMsg}</p>
+              </div>
+            </div>
+          )}
+
           {/* Info & Manual Action */}
-          <div className="mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
             <button 
               type="button"
-              onClick={() => navigate('/verify-data')}
-              className="text-[#1E3A5F] font-bold hover:underline text-[14px]"
+              onClick={handleManualEntry}
+              className="text-[#1E3A5F] hover:text-[#3B82F6] font-extrabold hover:underline text-[13.5px] transition-colors"
             >
-              Belum punya CV? Isi data manual di sini
+              Belum punya CV? Isi data profil manual di sini ➔
             </button>
 
-            <div className="flex items-center gap-2 text-[#6B7280] text-[12px]">
-              <AlertCircle size={14} />
-              <span>Privasi Anda terjaga sepenuhnya.</span>
+            <div className="flex items-center gap-1.5 text-[#6B7280] text-[12px] font-medium">
+              <AlertCircle size={14} className="text-slate-400" />
+              <span>Kerahasiaan data terjamin sepenuhnya.</span>
             </div>
           </div>
 
-          <hr className="my-8 border-[#E5E7EB]" />
+          <hr className="my-8 border-slate-100" />
 
           {/* Action Button */}
           <div className="flex justify-end">
             <button 
-              disabled={!selectedFile}
-              onClick={() => navigate('/verify-data')}
-              className={`h-[48px] px-10 rounded-[8px] font-bold text-[16px] transition-all ${
+              disabled={!selectedFile || isUploading}
+              onClick={handleUploadAndExtract}
+              className={`h-[50px] px-8 rounded-xl font-bold text-[15px] transition-all flex items-center gap-2 cursor-pointer ${
                 selectedFile 
-                ? 'bg-[#1E3A5F] text-white hover:bg-[#152A44] shadow-md' 
-                : 'bg-[#D1D5DB] text-white cursor-not-allowed'
+                ? 'bg-[#1E3A5F] text-white hover:bg-[#152A44] shadow-lg shadow-[#1E3A5F]/10 active:scale-95' 
+                : 'bg-slate-100 text-slate-400 cursor-not-allowed border-none'
               }`}
             >
-              Lanjutkan
+              <span>Lanjutkan ke Analisis</span> <ArrowRight size={16} />
             </button>
           </div>
+
         </div>
+
+        {/* LOADING OVERLAY - GLASSMORPHISM PREMIUM */}
+        {isUploading && uploadStatus !== 'error' && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className="bg-white rounded-[24px] max-w-[420px] w-full p-8 md:p-10 text-center shadow-2xl border border-white flex flex-col items-center">
+              
+              <div className="relative w-16 h-16 rounded-2xl bg-[#EFF6FF] flex items-center justify-center mb-6 shadow-md shadow-[#3B82F6]/5">
+                <Loader2 className="animate-spin text-[#3B82F6]" size={28} />
+              </div>
+              
+              <h3 className="text-[#1E3A5F] text-[18px] md:text-[20px] font-black leading-tight tracking-tight mb-2">
+                {uploadStatus === 'uploading' ? 'Mengunggah CV Anda...' : 'Menganalisis dengan AI...'}
+              </h3>
+              
+              <p className="text-[#6B7280] text-[13px] md:text-[14px] leading-relaxed font-medium mb-6">
+                {uploadStatus === 'uploading' 
+                  ? 'Sedang mengirimkan file PDF Anda secara aman ke server StepWise.' 
+                  : 'AI kami sedang membaca dan mengekstrak keahlian serta riwayat karier Anda secara presisi.'}
+              </p>
+
+              {/* Progress bar animation */}
+              <div className="w-full space-y-2.5">
+                <div className="h-[6px] rounded-full bg-slate-100 overflow-hidden relative">
+                  <div className={`h-full bg-gradient-to-r from-[#3B82F6] to-[#1E3A5F] rounded-full transition-all duration-[3000ms] ${
+                    uploadStatus === 'extracting' ? 'w-full' : 'w-1/2'
+                  }`}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </main>
 
       <Footer />
