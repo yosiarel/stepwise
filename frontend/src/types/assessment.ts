@@ -21,9 +21,10 @@ export interface AssessmentSession {
 }
 
 export interface StartAssessmentResponse {
-  sessionId: string;
-  isResumed?: boolean;
-  question: AssessmentQuestion;
+  sessionId:   string;
+  isResumed?:  boolean;
+  question:    AssessmentQuestion;
+  isCompleted?: boolean;
 }
 
 export interface SubmitAnswerBody {

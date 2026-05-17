@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import evaluationService from '../services/evaluationService';
-import trackerService from '../services/trackerService';
 import type { AdjustmentProposal } from '../types/evaluation';
 
 interface HistoricalReflection {
