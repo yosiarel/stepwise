@@ -212,7 +212,7 @@ const RoadmapPage = () => {
     setExpandedWeeks(prev => ({ ...prev, [weekNum]: !prev[weekNum] }));
   };
 
-  const handleToggleMaterialCheckbox = async (weekNum: number, matId: string, isCompleted: boolean) => {
+  const handleToggleMaterialCheckbox = async (matId: string, isCompleted: boolean) => {
     if (isCompleted) return; 
 
     setActionLoadingId(matId);
@@ -415,7 +415,7 @@ const RoadmapPage = () => {
                                   key={material.id}
                                   onClick={(e) => {
                                     e.stopPropagation(); 
-                                    handleToggleMaterialCheckbox(node.weekNumber, material.id, material.completed);
+                                    handleToggleMaterialCheckbox(material.id, material.completed);
                                   }}
                                   className={`p-3 rounded-xl border flex flex-col gap-1.5 transition-all ${
                                     material.completed 

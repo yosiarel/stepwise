@@ -34,7 +34,7 @@ const LoginPage = () => {
       try {
          const userProfile = await profileService.getProfile();
          
-         if (userProfile && userProfile.targetKarier) {
+         if (userProfile && userProfile.profile) {
            navigate('/dashboard');
          } else {
            navigate('/upload-cv'); 
