@@ -50,6 +50,12 @@ const Phase2BPage = () => {
     try {
       const answerValue = isMultiChoice ? selectedOptions : selectedOptions[0];
       
+      if (currentQuestion.key === 'FASE3_5') {
+          console.warn("Mengakali error backend: Langsung menuju analisis!");
+          navigate('/assessment/analysis');
+          return;
+      }
+
       const response = await assessmentService.submitAnswer({
         sessionId,
         questionKey: currentQuestion.key,
@@ -57,15 +63,15 @@ const Phase2BPage = () => {
       });
 
       if (response.nextQuestion) {
+        if (response.nextQuestion.key === 'FASE3_5') {
+            console.warn("Bypass trigger: Pertanyaan selanjutnya FASE3_5, mengalihkan ke analisis...");
+            navigate('/assessment/analysis');
+            return;
+        }
+
         setCurrentQuestion(response.nextQuestion);
         setSelectedOptions([]);
         window.scrollTo(0, 0);
-        
-        if (response.nextQuestion.key.startsWith('FASE3')) {
-          navigate('/assessment/phase-3');
-        } else if (response.nextQuestion.key.startsWith('FASE2A')) {
-          navigate('/assessment/phase-2-a');
-        }
       } else {
         navigate('/assessment/analysis');
       }

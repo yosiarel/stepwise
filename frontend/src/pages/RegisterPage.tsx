@@ -73,7 +73,7 @@ const RegisterPage = () => {
         password: formData.password,
         category: formData.status
       });
-      navigate('/login');
+      navigate('/login', { state: { message: "Pendaftaran berhasil, silakan masuk!" } });
     } catch (err) {
       console.error('Register error detail:', err);
       const axiosError = err as { response?: { data?: { message?: string } } };

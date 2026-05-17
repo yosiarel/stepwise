@@ -42,19 +42,19 @@ const VerifyDataPage = () => {
   const { cvId, extractedInfo } = (location.state || {}) as { cvId?: string; extractedInfo?: ExtractedInfo | null };
 
   const [formData, setFormData] = useState(() => {
-    const name = user?.name || extractedInfo?.name || 'Harry Phalosa';
-    const email = user?.email || 'harry.phalosa@example.com';
+    const name = extractedInfo?.name || user?.name || '';
+    const email = user?.email || '';
 
-    let educationStr = 'S1 Teknik Informatika - Universitas Brawijaya';
+    let educationStr = '';
     if (extractedInfo?.educationHistory && extractedInfo.educationHistory.length > 0) {
       const firstEdu = extractedInfo.educationHistory[0];
-      educationStr = `${firstEdu.degree || 'S1'} ${firstEdu.major || 'Teknik Informatika'} - ${firstEdu.institution || 'Universitas Brawijaya'}`;
+      educationStr = `${firstEdu.degree || ''} ${firstEdu.major || ''} - ${firstEdu.institution || ''}`.trim();
     }
 
-    let experienceStr = 'Fullstack Developer Intern';
+    let experienceStr = '';
     if (extractedInfo?.workExperiences && extractedInfo.workExperiences.length > 0) {
       const firstExp = extractedInfo.workExperiences[0];
-      experienceStr = `${firstExp.role || 'Software Engineer'} di ${firstExp.company || 'StepWise Partner'}`;
+      experienceStr = `${firstExp.role || ''} di ${firstExp.company || ''}`.trim();
     }
 
     return {
@@ -73,10 +73,7 @@ const VerifyDataPage = () => {
         level: 'Intermediate'
       }));
     }
-    return [
-      { id: 1, name: 'React.js', level: 'Intermediate' },
-      { id: 2, name: 'Node.js', level: 'Beginner' }
-    ];
+    return [];
   });
 
   const [isSaving, setIsSaving] = useState(false);

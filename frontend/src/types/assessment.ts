@@ -21,7 +21,8 @@ export interface AssessmentSession {
 }
 
 export interface StartAssessmentResponse {
-  session:  AssessmentSession;
+  sessionId: string;
+  isResumed?: boolean;
   question: AssessmentQuestion;
 }
 

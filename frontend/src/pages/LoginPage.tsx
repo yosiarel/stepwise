@@ -4,6 +4,7 @@ import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import authService from '../services/authService';
 import { useAuthStore } from '../store/useAuthStore';
+import profileService from '../services/profileService';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -28,8 +29,21 @@ const LoginPage = () => {
       console.log('Login berhasil, respons:', response);
       
       setAuth(response.data);
-      console.log('Auth state diupdate, mengarahkan ke dashboard...');
-      navigate('/dashboard');
+      console.log('Auth state diupdate, memeriksa status profil...');
+
+      try {
+         const userProfile = await profileService.getProfile();
+         
+         if (userProfile && userProfile.targetKarier) {
+           navigate('/dashboard');
+         } else {
+           navigate('/upload-cv'); 
+         }
+      } catch (profileErr) {
+         console.warn("Gagal mengambil profil (mungkin belum dibuat):", profileErr);
+         navigate('/upload-cv');
+      }
+
     } catch (err) {
       console.error('Login error detail:', err);
       const axiosError = err as { response?: { data?: { message?: string } } };
