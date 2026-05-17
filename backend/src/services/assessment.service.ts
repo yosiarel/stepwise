@@ -102,8 +102,23 @@ export const completeSessionService = async (userId: string, sessionId: string) 
   ];
   
   // Gaya Belajar & Lingkungan Kerja
-  const learningStyle = answerMap['FASE3_1'] ?? null;
-  const workEnvPreference = answerMap['FASE3_2'] ?? null;
+  const learningStyleRaw = answerMap['FASE3_1'] ?? null;
+  const learningStyleMap: Record<string, string> = {
+    'visual':   'VISUAL',
+    'auditori': 'AUDITORI',
+    'praktik':  'PRAKTIK_LANGSUNG',
+    'membaca':  'MEMBACA_MENULIS',
+  };
+  const learningStyle = learningStyleRaw ? (learningStyleMap[learningStyleRaw] ?? null) : null;
+
+  const workEnvPreferenceRaw = answerMap['FASE3_2'] ?? null;
+  const workEnvPreferenceMap: Record<string, string> = {
+    'individu':  'INDIVIDU',
+    'tim_kecil': 'TIM_KECIL',
+    'tim_besar': 'TIM_BESAR',
+    'fleksibel': 'FLEKSIBEL',
+  };
+  const workEnvPreference = workEnvPreferenceRaw ? (workEnvPreferenceMap[workEnvPreferenceRaw] ?? null) : null;
 
   const weeklyHoursRaw = answerMap['FASE3_4'] ?? null;
   const weeklyHoursMap: Record<string, number> = {
