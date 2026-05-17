@@ -10,7 +10,7 @@ import type {
 const evaluationService = {
   async triggerEvaluation(): Promise<TriggerEvaluationResponse> {
     const response = await axiosInstance.post('/evaluation/trigger');
-    return response.data;
+    return response.data.data;
   },
 
   async submitReflection(body: SubmitReflectionBody): Promise<SubmitReflectionResponse> {
@@ -25,6 +25,16 @@ const evaluationService = {
 
   async decideProposal(id: string, decision: 'APPROVED' | 'REJECTED'): Promise<AdjustmentProposal> {
     const response = await axiosInstance.patch(`/evaluation/proposal/${id}/decide`, { decision });
+    return response.data.data;
+  },
+
+  async getLastCompleted(): Promise<any> {
+    const response = await axiosInstance.get('/evaluation/last-completed');
+    return response.data.data;
+  },
+
+  async getPending(): Promise<any> {
+    const response = await axiosInstance.get('/evaluation/pending');
     return response.data.data;
   }
 };

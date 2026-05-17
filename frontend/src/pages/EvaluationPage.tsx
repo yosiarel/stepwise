@@ -45,20 +45,29 @@ const EvaluationPage = () => {
       const propData = await evaluationService.getPendingProposals();
       setProposals(propData.proposals || []);
 
-      const summary = await trackerService.getSummary();
-      const currentActualPercent = summary.overallProgress.percent;
+      const lastEval = await evaluationService.getLastCompleted();
+      
+      if (lastEval) {
+        const paceComfortMap: Record<string, string> = {
+          'comfortable': 'Pas (Nyaman Menyesuaikan)',
+          'too_slow': 'Terlalu Lambat',
+          'too_fast': 'Terlalu Cepat',
+        };
 
-      setLastReflection({
-        date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
-        paceQuestion: 'Seberapa nyaman dengan kecepatan belajar?',
-        paceAnswer: 'Pas (Nyaman Menyesuaikan)',
-        careerQuestion: 'Apakah masih yakin dengan target karier?',
-        careerAnswer: 'Ya, Sangat Yakin',
-        notesQuestion: 'Catatan tambahan',
-        notesAnswer: 'Pemahaman materi arsitektur modular berjalan baik. Siap melangkah ke fase berikutnya.',
-        targetPercent: Math.min(currentActualPercent + 12, 100), 
-        actualPercent: currentActualPercent
-      });
+        setLastReflection({
+          date: new Date(lastEval.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+          paceQuestion: 'Seberapa nyaman dengan kecepatan belajar?',
+          paceAnswer: paceComfortMap[lastEval.paceComfort] || lastEval.paceComfort || 'Pas',
+          careerQuestion: 'Apakah masih yakin dengan target karier?',
+          careerAnswer: lastEval.interestShifted ? 'Ragu / Tidak Yakin' : 'Ya, Sangat Yakin',
+          notesQuestion: 'Catatan tambahan',
+          notesAnswer: lastEval.freeNotes || 'Tidak ada catatan.',
+          targetPercent: Math.min(lastEval.readinessPercentAtEval + 12, 100), 
+          actualPercent: lastEval.readinessPercentAtEval
+        });
+      } else {
+        setLastReflection(null);
+      }
 
     } catch (err) {
       console.error('Gagal memuat komponen data evaluasi dari backend:', err);
