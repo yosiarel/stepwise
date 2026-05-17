@@ -1,300 +1,302 @@
 import { prisma } from '../src/lib/prisma.js';
 
-
 async function main() {
-  console.log('Cleaning up old assessment data...');
-  await prisma.assessmentAnswer.deleteMany();
-  await prisma.assessmentSession.deleteMany();
+  console.log('⚡ Menjalankan Seeder Pertanyaan Asesmen StepWise...');
+
+  // Bersihkan data lama untuk menghindari duplikasi / constraint error
   await prisma.assessmentOption.deleteMany();
   await prisma.assessmentQuestion.deleteMany();
 
-  // ═══════════════════════════════════════════════════════════════
-  // FASE 1 — Familiaritas Teknologi  (Wajib, Semua Pengguna)
-  // Routing: A/B → jalur Non-Teknis (2A) | C/D → jalur Teknis (2B)
-  // ═══════════════════════════════════════════════════════════════
+  // ===============================================================
+  // FASE 1 — Profiling & Familiaritas (Wajib, Semua Pengguna)
+  // ===============================================================
   const fase1 = await prisma.assessmentQuestion.create({
     data: {
-      key:       'FASE1',
-      text:      'Seperti apa kebiasaanmu menggunakan teknologi digital sehari-hari?',
-      helpText:  'Pilih salah satu yang paling menggambarkan dirimu.',
+      key: 'FASE1',
+      text: 'Like apa kebiasaanmu menggunakan teknologi digital sehari-hari?',
+      helpText: 'Pilih salah satu yang paling menggambarkan dirimu.',
       inputType: 'single_choice',
-      order:     1,
+      order: 1,
       options: {
         create: [
           {
-            label: 'Pengguna Dasar – Saya biasanya hanya memakai aplikasi untuk chat, media sosial, browsing ringan, dan nonton video.',
+            label: 'Pengguna Dasar – Saya biasanya hanya memakai aplikasi untuk chat, media sosial, browsing ringan, dan nonton video. Saya jarang atau belum pernah mencoba tools yang lebih teknis seperti rumus Excel kompleks, editing, apalagi coding.',
             value: 'A',
             order: 1,
-            nextQuestionKey: 'FASE2A_1',
+            nextQuestionKey: 'FASE2A_1' // Mengarah ke Jalur Non-Teknis
           },
           {
-            label: 'Pengguna Cukup Aktif – Saya lancar mengedit dokumen, membuat konten di Canva, mengolah data di Excel, dan mudah beradaptasi dengan aplikasi baru.',
+            label: 'Pengguna Cukup Aktif – Saya cukup lancar menggunakan berbagai aplikasi untuk belajar dan bekerja — mengedit dokumen, membuat konten sederhana di Canva, mengolah data dengan Excel, atau mengatur file cloud. Saya bisa beradaptasi dengan aplikasi baru tanpa banyak kesulitan.',
             value: 'B',
             order: 2,
-            nextQuestionKey: 'FASE2A_1',
+            nextQuestionKey: 'FASE2A_1' // Mengarah ke Jalur Non-Teknis
           },
           {
-            label: 'Pengguna Mahir – Saya terbiasa dengan tools profesional (desain, akuntansi, manajemen proyek) dan pernah mencoba coding atau otomatisasi sederhana.',
+            label: 'Pengguna Mahir – Saya terbiasa menggunakan tools profesional untuk pekerjaan spesifik: software desain, akuntansi, manajemen proyek, atau pernah mencoba coding dan otomatisasi sederhana. Saya cukup percaya diri mengeksplorasi teknologi baru.',
             value: 'C',
             order: 3,
-            nextQuestionKey: 'FASE2B_1',
+            nextQuestionKey: 'FASE2B_1' // Mengarah ke Jalur Teknis
           },
           {
-            label: 'Pengguna Sangat Mahir – Saya aktif menulis kode, mengelola server, mengolah data dengan Python/SQL, atau merancang antarmuka aplikasi.',
+            label: 'Pengguna Sangat Mahir – Saya membuat atau mengutak-atik teknologi — menulis kode, mengelola server, mengolah data dengan Python/SQL, atau merancang antarmuka aplikasi. Ini adalah bagian penting dari pekerjaan atau hobi saya.',
             value: 'D',
             order: 4,
-            nextQuestionKey: 'FASE2B_1',
-          },
-        ],
-      },
-    },
+            nextQuestionKey: 'FASE2B_1' // Mengarah ke Jalur Teknis
+          }
+        ]
+      }
+    }
   });
-  console.log(`✓ FASE1 created        (id: ${fase1.id})`);
+  console.log(`✓ FASE1 Berhasil Dibuat (ID: ${fase1.id})`);
 
-  // ═══════════════════════════════════════════════════════════════
-  // FASE 2A — Eksplorasi Potensi  (Jalur Non-Teknis, 2 pertanyaan)
-  // ═══════════════════════════════════════════════════════════════
-
-  // ── 2A-1 : Aktivitas & Hobi ───────────────────────────────────
+  // ===============================================================
+  // FASE 2A — Eksplorasi Potensi (Jalur Non-Teknis)
+  // ===============================================================
   const fase2a1 = await prisma.assessmentQuestion.create({
     data: {
-      key:           'FASE2A_1',
-      text:          'Dari aktivitas berikut, mana yang paling sering kamu lakukan atau paling kamu nikmati?',
-      helpText:      'Pilih maksimal 2.',
-      inputType:     'multi_choice',
-      maxSelections: 2,
-      order:         2,
+      key: 'FASE2A_1',
+      text: 'Bayangkan kamu diminta membantu sebuah acara amal. Kamu paling bersemangat mengambil peran yang mana?',
+      helpText: 'Pilih satu yang paling menggambarkan dirimu.',
+      inputType: 'single_choice',
+      order: 2,
       options: {
         create: [
-          { label: 'Mengedit foto/video, membuat desain grafis, atau menata konten media sosial',                        value: 'desain',    order: 1, nextQuestionKey: 'FASE2A_2' },
-          { label: 'Membaca artikel, menonton video edukatif, atau riset mendalam tentang suatu topik',                  value: 'riset',     order: 2, nextQuestionKey: 'FASE2A_2' },
-          { label: 'Mengorganisir file, membuat daftar rapi, atau menganalisis data dan angka',                          value: 'analitis',  order: 3, nextQuestionKey: 'FASE2A_2' },
-          { label: 'Menulis cerita, membuat konten kreatif, atau aktif di media sosial',                                 value: 'konten',    order: 4, nextQuestionKey: 'FASE2A_2' },
-          { label: 'Memperbaiki barang rusak, merakit sesuatu, atau mengutak-atik perangkat elektronik',                 value: 'teknis',    order: 5, nextQuestionKey: 'FASE2A_2' },
-          { label: 'Berdiskusi, menjelaskan sesuatu ke orang lain, atau aktif dalam kegiatan sosial',                   value: 'sosial',    order: 6, nextQuestionKey: 'FASE2A_2' },
-          { label: 'Berjualan online, merencanakan proyek, atau mencari peluang baru',                                   value: 'bisnis',    order: 7, nextQuestionKey: 'FASE2A_2' },
-        ],
-      },
-    },
+          { label: 'Merancang tampilan dekorasi, poster, dan feed Instagram acara', value: 'A', order: 1, nextQuestionKey: 'FASE2A_2' },
+          { label: 'Mengatur jadwal, logistik, memastikan semua tim terkoordinasi lancar', value: 'B', order: 2, nextQuestionKey: 'FASE2A_2' },
+          { label: 'Mencatat dana masuk/keluar, membuat perkiraan anggaran, menghitung tiket terjual', value: 'C', order: 3, nextQuestionKey: 'FASE2A_2' },
+          { label: 'Memikirkan ide konten kreatif, menulis caption, atau membuat video pendek', value: 'D', order: 4, nextQuestionKey: 'FASE2A_2' },
+          { label: 'Mengawasi jalannya acara, memastikan keamanan, punya rencana cadangan jika ada masalah', value: 'E', order: 5, nextQuestionKey: 'FASE2A_2' },
+          { label: 'Membantu di mana saja dibutuhkan — menyambut tamu, mengangkat barang, dll.', value: 'F', order: 6, nextQuestionKey: 'FASE2A_2' }
+        ]
+      }
+    }
   });
-  console.log(`✓ FASE2A_1 created     (id: ${fase2a1.id})`);
 
-  // ── 2A-2 : Minat IT Versi Awam ────────────────────────────────
-  const fase2a2 = await prisma.assessmentQuestion.create({
+  await prisma.assessmentQuestion.create({
     data: {
-      key:       'FASE2A_2',
-      text:      'Dari gambaran karier berikut, mana yang paling menarik bagimu meskipun kamu belum punya pengalamannya?',
-      helpText:  'Pilih maksimal 2.',
+      key: 'FASE2A_2',
+      text: 'Dari aktivitas berikut, mana yang paling menarik perhatianmu atau paling menggambarkan hobimu sehari-hari?',
+      helpText: 'Pilih maksimal 2 pilihan.',
       inputType: 'multi_choice',
       maxSelections: 2,
-      order:     3,
+      order: 3,
       options: {
         create: [
-          { label: 'Membuat tampilan aplikasi atau website yang indah dan mudah dipakai',        value: 'frontend_uiux',      order: 1,  nextQuestionKey: 'FASE3_1' },
-          { label: 'Membangun "otak" di balik aplikasi — logika, database, dan koneksi antar sistem', value: 'backend',       order: 2,  nextQuestionKey: 'FASE3_1' },
-          { label: 'Membuat aplikasi smartphone yang bisa diunduh di Play Store atau App Store', value: 'mobile',             order: 3,  nextQuestionKey: 'FASE3_1' },
-          { label: 'Menganalisis data untuk menemukan pola dan membantu pengambilan keputusan',  value: 'data',               order: 4,  nextQuestionKey: 'FASE3_1' },
-          { label: 'Membangun sistem AI atau machine learning yang bisa "belajar" sendiri',      value: 'ai_ml',              order: 5,  nextQuestionKey: 'FASE3_1' },
-          { label: 'Melindungi sistem dari serangan siber dan memastikan keamanan data',        value: 'cyber',              order: 6,  nextQuestionKey: 'FASE3_1' },
-          { label: 'Mengelola server dan infrastruktur cloud agar aplikasi berjalan lancar',    value: 'cloud_devops',       order: 7,  nextQuestionKey: 'FASE3_1' },
-          { label: 'Membuat game yang seru dan imersif',                                        value: 'game',               order: 8,  nextQuestionKey: 'FASE3_1' },
-          { label: 'Mempromosikan produk digital dan mengoptimalkan visibilitas online',        value: 'digital_marketing',  order: 9,  nextQuestionKey: 'FASE3_1' },
-          { label: 'Memimpin tim produk, menentukan fitur apa yang harus dibangun dan kenapa',  value: 'product_mgmt',       order: 10, nextQuestionKey: 'FASE3_1' },
-          { label: 'Belum tahu, masih ingin eksplorasi lebih lanjut',                           value: 'explore',            order: 11, nextQuestionKey: 'FASE3_1' },
-        ],
-      },
-    },
+          { label: 'Mengedit foto atau video, membuat desain grafis, atau menata feeds agar estetik', value: 'A', order: 1, nextQuestionKey: 'FASE2A_3' },
+          { label: 'Membaca artikel, buku, atau menonton video yang membahas suatu topik mendalam', value: 'B', order: 2, nextQuestionKey: 'FASE2A_3' },
+          { label: 'Mengatur sesuatu agar rapi dan terstruktur atau mencari tahu data statistik', value: 'C', order: 3, nextQuestionKey: 'FASE2A_3' },
+          { label: 'Menulis cerita, caption, membuat konten, atau bermain media sosial', value: 'D', order: 4, nextQuestionKey: 'FASE2A_3' },
+          { label: 'Memperbaiki barang rusak, membongkar pasang mainan/elektronik, merakit sesuatu', value: 'E', order: 5, nextQuestionKey: 'FASE2A_3' },
+          { label: 'Berdiskusi tentang isu terkini, berdebat sehat, atau menjelaskan sesuatu ke teman', value: 'F', order: 6, nextQuestionKey: 'FASE2A_3' }
+        ]
+      }
+    }
   });
-  console.log(`✓ FASE2A_2 created     (id: ${fase2a2.id})`);
 
-  // ═══════════════════════════════════════════════════════════════
-  // FASE 2B — Pemetaan Kompetensi  (Jalur Teknis, 2 pertanyaan)
-  // ═══════════════════════════════════════════════════════════════
+  await prisma.assessmentQuestion.create({
+    data: {
+      key: 'FASE2A_3',
+      text: 'Dari deskripsi kepribadian ini, mana yang paling terdengar seperti dirimu?',
+      helpText: 'Pilih satu yang paling dominan.',
+      inputType: 'single_choice',
+      order: 4,
+      options: {
+        create: [
+          { label: 'Si Praktis – Suka kegiatan nyata, menggunakan tangan/alat, hasil terlihat jelas.', value: 'R', order: 1, nextQuestionKey: 'FASE2A_4' },
+          { label: 'Si Pemikir – Suka memahami akar masalah, penasaran, riset, and analisa data.', value: 'I', order: 2, nextQuestionKey: 'FASE2A_4' },
+          { label: 'Si Kreatif – Suka menciptakan sesuatu yang unik, indah, ekspresif, tanpa aturan kaku.', value: 'A', order: 3, nextQuestionKey: 'FASE2A_4' },
+          { label: 'Si Penolong – Peduli sekitar, suka mengajar, mendukung, and membantu teman.', value: 'S', order: 4, nextQuestionKey: 'FASE2A_4' },
+          { label: 'Si Pemimpin – Suka mengambil inisiatif, memimpin proyek, and berorientasi hasil.', value: 'E', order: 5, nextQuestionKey: 'FASE2A_4' },
+          { label: 'Si Teratur – Sistematis, teliti, menyukai prosedur jadwal harian, and folder rapi.', value: 'C', order: 6, nextQuestionKey: 'FASE2A_4' }
+        ]
+      }
+    }
+  });
 
-  // ── 2B-1 : Area Minat IT Detail ───────────────────────────────
+  await prisma.assessmentQuestion.create({
+    data: {
+      key: 'FASE2A_4',
+      text: 'Saat menghadapi tugas baru dan kamu tidak tahu harus mulai dari mana, apa tindakanmu?',
+      helpText: 'Pilih salah satu.',
+      inputType: 'single_choice',
+      order: 5,
+      options: {
+        create: [
+          { label: 'Langsung mencoba-coba sendiri, belajar dari kesalahan', value: 'A', order: 1, nextQuestionKey: 'FASE3_1' },
+          { label: 'Mencari tutorial, membaca panduan, atau bertanya pada ahlinya', value: 'B', order: 2, nextQuestionKey: 'FASE3_1' },
+          { label: 'Menunggu instruksi jelas atau bantuan sebelum mulai', value: 'C', order: 3, nextQuestionKey: 'FASE3_1' },
+          { label: 'Diskusi dengan teman atau tim untuk brainstorming bersama', value: 'D', order: 4, nextQuestionKey: 'FASE3_1' }
+        ]
+      }
+    }
+  });
+  console.log('✓ Jalur Kamar FASE 2A Berhasil Disuntikkan.');
+
+  // ===============================================================
+  // FASE 2B — Pemetaan Kompetensi (Jalur Teknis)
+  // ===============================================================
   const fase2b1 = await prisma.assessmentQuestion.create({
     data: {
-      key:           'FASE2B_1',
-      text:          'Dari area IT berikut, mana yang paling membuatmu bersemangat untuk digeluti lebih dalam?',
-      helpText:      'Pilih maksimal 2.',
-      inputType:     'multi_choice',
+      key: 'FASE2B_1',
+      text: 'Dari area IT berikut, mana yang paling membuatmu bersemangat untuk digeluti lebih dalam?',
+      helpText: 'Pilih maksimal 2 pilihan industri.',
+      inputType: 'multi_choice',
       maxSelections: 2,
-      order:         4,
+      order: 6,
       options: {
         create: [
-          // Membangun Produk
-          { label: 'Frontend & UI Development – HTML, CSS, JS, React, Vue. Profesi: Frontend Dev, UI Engineer.',                             value: 'frontend',          order: 1,  nextQuestionKey: 'FASE2B_2' },
-          { label: 'Backend & API Development – Node.js, Express, Laravel, PostgreSQL. Profesi: Backend Dev, API Engineer.',                 value: 'backend',           order: 2,  nextQuestionKey: 'FASE2B_2' },
-          { label: 'Mobile Development – Flutter, React Native, Swift, Kotlin. Profesi: Mobile Dev.',                                       value: 'mobile',            order: 3,  nextQuestionKey: 'FASE2B_2' },
-          // Data & AI
-          { label: 'Data Science & Analytics – Python, SQL, Pandas, Tableau. Profesi: Data Analyst, Data Scientist.',                       value: 'data_science',      order: 4,  nextQuestionKey: 'FASE2B_2' },
-          { label: 'AI & Machine Learning – TensorFlow, PyTorch. Profesi: AI/ML Engineer.',                                                 value: 'ai_ml',             order: 5,  nextQuestionKey: 'FASE2B_2' },
-          // Infrastruktur & Keamanan
-          { label: 'Cybersecurity & Network – Kali Linux, Wireshark. Profesi: Security Analyst, Network Engineer.',                         value: 'cyber',             order: 6,  nextQuestionKey: 'FASE2B_2' },
-          { label: 'Cloud & DevOps – AWS, Docker, Kubernetes. Profesi: DevOps Engineer, Cloud Engineer.',                                   value: 'cloud_devops',      order: 7,  nextQuestionKey: 'FASE2B_2' },
-          { label: 'QA / Quality Assurance – Selenium, JIRA. Profesi: QA Engineer, Software Tester.',                                      value: 'qa',                order: 8,  nextQuestionKey: 'FASE2B_2' },
-          // Desain & Produk
-          { label: 'UI/UX Design – Figma, Adobe XD. Profesi: UI/UX Designer, Product Designer.',                                           value: 'uiux',              order: 9,  nextQuestionKey: 'FASE2B_2' },
-          { label: 'Product Management – JIRA, Notion. Profesi: Product Manager.',                                                         value: 'product_mgmt',     order: 10, nextQuestionKey: 'FASE2B_2' },
-          // Teknologi Khusus
-          { label: 'Game Development – Unity, Unreal Engine. Profesi: Game Developer.',                                                     value: 'game',              order: 11, nextQuestionKey: 'FASE2B_2' },
-          { label: 'IoT & Embedded Systems – Arduino, Raspberry Pi. Profesi: IoT Engineer.',                                               value: 'iot',               order: 12, nextQuestionKey: 'FASE2B_2' },
-          { label: 'Blockchain & Web3 – Solidity, Ethereum. Profesi: Blockchain Developer.',                                               value: 'blockchain',        order: 13, nextQuestionKey: 'FASE2B_2' },
-          { label: 'Digital Marketing & SEO – Google Analytics, Meta Ads. Profesi: Digital Marketer, Growth Hacker.',                      value: 'digital_marketing', order: 14, nextQuestionKey: 'FASE2B_2' },
-        ],
-      },
-    },
+          { label: 'Frontend & UI Development – Membangun tampilan aplikasi yang indah dan interaktif.', value: 'frontend', order: 1, nextQuestionKey: 'FASE2B_2' },
+          { label: 'Backend & API Development – Membangun logika server, database, and arsitektur API.', value: 'backend', order: 2, nextQuestionKey: 'FASE2B_2' },
+          { label: 'Mobile Development – Membangun aplikasi native/hybrid smartphone Android/iOS.', value: 'mobile', order: 3, nextQuestionKey: 'FASE2B_2' },
+          { label: 'Data Science & Analytics – Mengolah data besar untuk insight bisnis and visualisasi.', value: 'data_science', order: 4, nextQuestionKey: 'FASE2B_2' },
+          { label: 'Artificial Intelligence & ML – Merancang algoritma cerdas and pemodelan kognitif.', value: 'ai_ml', order: 5, nextQuestionKey: 'FASE2B_2' },
+          { label: 'UI/UX Design – Merancang pengalaman and alur interaksi pengguna di Figma.', value: 'uiux', order: 6, nextQuestionKey: 'FASE2B_2' }
+        ]
+      }
+    }
   });
-  console.log(`✓ FASE2B_1 created     (id: ${fase2b1.id})`);
 
-  // ── 2B-2 : Motivasi & Aspirasi Karier ─────────────────────────
-  const fase2b2 = await prisma.assessmentQuestion.create({
+  await prisma.assessmentQuestion.create({
     data: {
-      key:           'FASE2B_2',
-      text:          'Apa yang paling mendorongmu ingin mendalami IT lebih serius?',
-      helpText:      'Pilih maksimal 2.',
-      inputType:     'multi_choice',
+      key: 'FASE2B_2',
+      text: 'Apa motivasi utama yang paling mendorongmu ingin mendalami bidang IT?',
+      helpText: 'Pilih maksimal 2 pilihan.',
+      inputType: 'multi_choice',
       maxSelections: 2,
-      order:         5,
+      order: 7,
       options: {
         create: [
-          { label: 'Membangun produk yang dipakai banyak orang',              value: 'produk',     order: 1, nextQuestionKey: 'FASE3_1' },
-          { label: 'Memecahkan masalah kompleks dan mencari solusi cerdas',   value: 'problem',    order: 2, nextQuestionKey: 'FASE3_1' },
-          { label: 'Mendapatkan penghasilan tinggi dan stabilitas finansial',  value: 'finansial',  order: 3, nextQuestionKey: 'FASE3_1' },
-          { label: 'Fleksibilitas kerja (remote, freelance, jam fleksibel)',   value: 'fleksibel',  order: 4, nextQuestionKey: 'FASE3_1' },
-          { label: 'Terus belajar teknologi baru dan tidak stagnan',           value: 'growth',     order: 5, nextQuestionKey: 'FASE3_1' },
-          { label: 'Berkontribusi pada proyek open source atau dampak sosial', value: 'dampak',     order: 6, nextQuestionKey: 'FASE3_1' },
-        ],
-      },
-    },
+          { label: 'Membangun produk nyata yang dipakai oleh banyak orang', value: 'A', order: 1, nextQuestionKey: 'FASE2B_3' },
+          { label: 'Memecahkan masalah kompleks dan mencari solusi logis', value: 'B', order: 2, nextQuestionKey: 'FASE2B_3' },
+          { label: 'Mendapatkan penghasilan tinggi dan stabilitas karier jangka panjang', value: 'C', order: 3, nextQuestionKey: 'FASE2B_3' },
+          { label: 'Fleksibilitas kerja yang tinggi (Remote Work, WFH, Freelance)', value: 'D', order: 4, nextQuestionKey: 'FASE2B_3' }
+        ]
+      }
+    }
   });
-  console.log(`✓ FASE2B_2 created     (id: ${fase2b2.id})`);
 
-  // ═══════════════════════════════════════════════════════════════
-  // FASE 3 — Gaya & Preferensi  (Wajib, Semua Pengguna)
-  // ═══════════════════════════════════════════════════════════════
-
-  // ── 3-1 : Kepribadian Dominan (RIASEC) ────────────────────────
-  const fase3_1 = await prisma.assessmentQuestion.create({
+  await prisma.assessmentQuestion.create({
     data: {
-      key:       'FASE3_1',
-      text:      'Dari enam deskripsi berikut, mana yang paling terdengar seperti dirimu?',
-      helpText:  'Pilih satu yang paling dominan.',
+      key: 'FASE2B_3',
+      text: 'Dari deskripsi karakter berikut, mana yang paling mendekati kepribadianmu?',
+      helpText: 'Pilih satu yang paling utama.',
       inputType: 'single_choice',
-      order:     6,
+      order: 8,
       options: {
         create: [
-          {
-            label: 'Si Praktis – Suka kegiatan nyata dan hasil yang terlihat langsung. Lebih nyaman mengerjakan sesuatu secara langsung daripada berpikir terlalu lama.',
-            value: 'R', order: 1, nextQuestionKey: 'FASE3_2',
-          },
-          {
-            label: 'Si Pemikir – Suka memahami sesuatu sampai ke akarnya, senang riset, dan menikmati teka-teki atau masalah yang butuh analisis mendalam.',
-            value: 'I', order: 2, nextQuestionKey: 'FASE3_2',
-          },
-          {
-            label: 'Si Kreatif – Suka menciptakan, mengekspresikan diri, dan membuat sesuatu yang unik. Tidak suka terikat aturan yang kaku.',
-            value: 'A', order: 3, nextQuestionKey: 'FASE3_2',
-          },
-          {
-            label: 'Si Penolong – Suka membantu, mengajar, atau mendukung orang lain. Peduli dengan perasaan orang di sekitar.',
-            value: 'S', order: 4, nextQuestionKey: 'FASE3_2',
-          },
-          {
-            label: 'Si Pemimpin – Suka ambil inisiatif, mempengaruhi orang lain, dan berorientasi pada pencapaian target.',
-            value: 'E', order: 5, nextQuestionKey: 'FASE3_2',
-          },
-          {
-            label: 'Si Teratur – Suka keteraturan, prosedur, dan data yang rapi. Puas ketika semuanya berjalan sesuai rencana.',
-            value: 'C', order: 6, nextQuestionKey: 'FASE3_2',
-          },
-        ],
-      },
-    },
+          { label: 'Si Praktis – Suka eksekusi nyata, merakit komponen, hasil langsung terlihat.', value: 'R', order: 1, nextQuestionKey: 'FASE3_1' },
+          { label: 'Si Pemikir – Suka menganalisis kode, algoritma, memecahkan teka-teki logika.', value: 'I', order: 2, nextQuestionKey: 'FASE3_1' },
+          { label: 'Si Kreatif – Suka mendesain antarmuka unik, estetika layout, mendobrak pakem kaku.', value: 'A', order: 3, nextQuestionKey: 'FASE3_1' },
+          { label: 'Si Teratur – Menyukai standardisasi folder, dokumentasi rapi, and checklist sistematis.', value: 'C', order: 4, nextQuestionKey: 'FASE3_1' }
+        ]
+      }
+    }
   });
-  console.log(`✓ FASE3_1 created      (id: ${fase3_1.id})`);
+  console.log(`✓ Jalur Kamar FASE 2B Berhasil Disuntikkan (ID Awal: ${fase2b1.id})`);
 
-  // ── 3-2 : Gaya Belajar ────────────────────────────────────────
-  const fase3_2 = await prisma.assessmentQuestion.create({
+  // ===============================================================
+  // FASE 3 — Gaya & Preferensi (Wajib, Semua Pengguna)
+  // ===============================================================
+  await prisma.assessmentQuestion.create({
     data: {
-      key:       'FASE3_2',
-      text:      'Bagaimana kamu paling mudah memahami hal baru?',
-      helpText:  'Pilih satu.',
+      key: 'FASE3_1',
+      text: 'Bagaimana kamu paling nyaman mempelajari suatu materi baru?',
+      helpText: 'Pilih satu gaya belajar utama.',
       inputType: 'single_choice',
-      order:     7,
+      order: 9,
       options: {
         create: [
-          { label: 'Visual – Menonton video, melihat diagram, atau infografis.',                      value: 'visual',   order: 1, nextQuestionKey: 'FASE3_3' },
-          { label: 'Auditori – Mendengarkan penjelasan, podcast, atau diskusi.',                      value: 'auditori', order: 2, nextQuestionKey: 'FASE3_3' },
-          { label: 'Praktik Langsung – Langsung mencoba sendiri dan belajar dari kesalahan.',         value: 'praktik',  order: 3, nextQuestionKey: 'FASE3_3' },
-          { label: 'Membaca & Menulis – Membaca dokumentasi atau artikel panjang dan membuat catatan.', value: 'membaca', order: 4, nextQuestionKey: 'FASE3_3' },
-        ],
-      },
-    },
+          { label: 'Visual – Menonton video tutorial, bagan arsitektur, atau membaca infografis.', value: 'visual', order: 1, nextQuestionKey: 'FASE3_2' },
+          { label: 'Auditori – Mendengarkan rekaman penjelasan, sesi podcast, atau diskusi kelompok.', value: 'auditori', order: 2, nextQuestionKey: 'FASE3_2' },
+          { label: 'Praktik Langsung – Menulis kode langsung di text editor dan debugging mandiri.', value: 'praktik', order: 3, nextQuestionKey: 'FASE3_2' },
+          { label: 'Membaca & Menulis – Membaca dokumentasi API resmi, artikel teknis, and mencatat.', value: 'membaca', order: 4, nextQuestionKey: 'FASE3_2' }
+        ]
+      }
+    }
   });
-  console.log(`✓ FASE3_2 created      (id: ${fase3_2.id})`);
 
-  // ── 3-3 : Preferensi Lingkungan Kerja ─────────────────────────
-  const fase3_3 = await prisma.assessmentQuestion.create({
+  await prisma.assessmentQuestion.create({
     data: {
-      key:       'FASE3_3',
-      text:      'Lingkungan kerja seperti apa yang paling membuatmu nyaman dan produktif?',
-      helpText:  'Pilih satu.',
+      key: 'FASE3_2',
+      text: 'Lingkungan ekosistem kerja seperti apa yang paling membuatmu produktif?',
+      helpText: 'Pilih salah satu lingkungan.',
       inputType: 'single_choice',
-      order:     8,
+      order: 10,
       options: {
         create: [
-          { label: 'Bekerja sendiri dengan fokus penuh, tanpa banyak gangguan.',             value: 'individu',  order: 1, nextQuestionKey: 'FASE3_4' },
-          { label: 'Bekerja dalam tim kecil yang erat (2–5 orang).',                         value: 'tim_kecil', order: 2, nextQuestionKey: 'FASE3_4' },
-          { label: 'Bekerja dalam tim besar dengan peran dan struktur yang jelas.',           value: 'tim_besar', order: 3, nextQuestionKey: 'FASE3_4' },
-          { label: 'Fleksibel — bisa menyesuaikan diri di berbagai situasi.',                value: 'fleksibel', order: 4, nextQuestionKey: 'FASE3_4' },
-        ],
-      },
-    },
+          { label: 'Bekerja sendiri dengan fokus penuh – Produktif tanpa adanya interupsi luar.', value: 'individu', order: 1, nextQuestionKey: 'FASE3_3' },
+          { label: 'Bekerja dalam kelompok kecil (2–5 orang) – Kolaborasi intensif and lincah.', value: 'tim_kecil', order: 2, nextQuestionKey: 'FASE3_3' },
+          { label: 'Bekerja dalam tim besar dengan koridor peran terdefinisi sangat jelas.', value: 'tim_besar', order: 3, nextQuestionKey: 'FASE3_3' },
+          { label: 'Fleksibel — Mampu menyesuaikan diri baik dalam kesendirian maupun kerja tim.', value: 'fleksibel', order: 4, nextQuestionKey: 'FASE3_3' }
+        ]
+      }
+    }
   });
-  console.log(`✓ FASE3_3 created      (id: ${fase3_3.id})`);
 
-  const fase3_4 = await prisma.assessmentQuestion.create({
+  await prisma.assessmentQuestion.create({
     data: {
-      key:       'FASE3_4',
-      text:      'Tipe perusahaan seperti apa yang paling kamu idamkan?',
-      helpText:  'Pilih satu.',
+      key: 'FASE3_3',
+      text: 'Tipe model bisnis perusahaan seperti apa yang paling kamu idamkan?',
+      helpText: 'Pilih tipe instansi.',
       inputType: 'single_choice',
-      order:     9,
+      order: 11,
       options: {
         create: [
-          { label: 'Startup – Dinamis, cepat, banyak belajar, tapi kurang stabil.',                  value: 'startup',      order: 1, nextQuestionKey: 'FASE3_5' },
-          { label: 'Korporat – Struktur jelas, jenjang karier terdefinisi, lebih stabil.',            value: 'korporat',     order: 2, nextQuestionKey: 'FASE3_5' },
-          { label: 'Freelance / Mandiri – Bekerja lepas, atur jadwal dan proyek sendiri.',            value: 'freelance',    order: 3, nextQuestionKey: 'FASE3_5' },
-          { label: 'Tech Company / Digital Agency – Fokus produk digital, lingkungan inovatif.',      value: 'tech_company', order: 4, nextQuestionKey: 'FASE3_5' },
-          { label: 'Belum terpikirkan – Masih menjelajah.',                                           value: 'belum',        order: 5, nextQuestionKey: 'FASE3_5' },
-        ],
-      },
-    },
+          { label: 'Startup – Ekosistem bergerak sangat cepat, dinamis, menuntut adaptabilitas.', value: 'startup', order: 1, nextQuestionKey: 'FASE3_4' },
+          { label: 'Korporat / Perusahaan Mapan – Struktur birokrasi rapi, stabil, jenjang karier pasti.', value: 'korporat', order: 2, nextQuestionKey: 'FASE3_4' },
+          { label: 'Freelance / Mandiri – Memiliki otoritas penuh atas kendali waktu dan klien mandiri.', value: 'freelance', order: 3, nextQuestionKey: 'FASE3_4' },
+          { label: 'Tech Company / Digital Agency – Fokus pada produk inovasi digital teknologi murni.', value: 'tech_company', order: 4, nextQuestionKey: 'FASE3_4' }
+        ]
+      }
+    }
   });
-  console.log(`✓ FASE3_4 created      (id: ${fase3_4.id})`);
 
-  const fase3_5 = await prisma.assessmentQuestion.create({
+  await prisma.assessmentQuestion.create({
     data: {
-      key:       'FASE3_5',
-      text:      'Berapa jam per minggu yang secara realistis bisa kamu sisihkan untuk belajar?',
-      helpText:  'Jujur saja — ini untuk membuat jadwal yang realistis, bukan menghakimi.',
+      key: 'FASE3_4',
+      text: 'Berapa jam per minggu yang secara realistis bisa kamu komit untuk belajar?',
+      helpText: 'Pilih kapasitas waktu terdekat.',
       inputType: 'single_choice',
-      order:     10,
+      order: 12,
       options: {
         create: [
-          { label: 'Kurang dari 5 jam',   value: '<5',   order: 1, nextQuestionKey: null },
-          { label: '5–10 jam',            value: '5-10', order: 2, nextQuestionKey: null },
-          { label: '10–20 jam',           value: '10-20',order: 3, nextQuestionKey: null },
-          { label: 'Lebih dari 20 jam',   value: '>20',  order: 4, nextQuestionKey: null },
-        ],
-      },
-    },
+          { label: 'Kurang dari 5 jam per minggu', value: '<5', order: 1, nextQuestionKey: 'FASE3_5' },
+          { label: '5–10 jam per minggu', value: '5-10', order: 2, nextQuestionKey: 'FASE3_5' },
+          { label: '10–20 jam per minggu', value: '10-20', order: 3, nextQuestionKey: 'FASE3_5' },
+          { label: 'Lebih dari 20 jam per minggu', value: '>20', order: 4, nextQuestionKey: 'FASE3_5' }
+        ]
+      }
+    }
   });
-  console.log(`✓ FASE3_5 created      (id: ${fase3_5.id})`);
 
+  // 🛠️ INTEGRASI BARU: FASE3_5 Untuk memicu tombol 'Selesaikan Asesmen' di frontend & supply ProfilePage
+  const fase35 = await prisma.assessmentQuestion.create({
+    data: {
+      key: 'FASE3_5',
+      text: 'Berapa ekspektasi uang saku atau target pendapatan per bulan yang kamu harapkan?',
+      helpText: 'Pilih kisaran ekspektasi minimum Anda.',
+      inputType: 'single_choice',
+      order: 13,
+      options: {
+        create: [
+          { label: 'Uang saku / Pendapatan di bawah Rp 3.000.000', value: 'Rp < 3.000.000', order: 1, nextQuestionKey: null }, // Akhir Kuesioner
+          { label: 'Uang saku / Pendapatan berkisar Rp 3.000.000 — Rp 5.000.000', value: 'Rp 3.000.000 — Rp 5.000.000', order: 2, nextQuestionKey: null },
+          { label: 'Pendapatan profesional berkisar Rp 5.000.000 — Rp 10.000.000', value: 'Rp 5.000.000 — Rp 10.000.000', order: 3, nextQuestionKey: null },
+          { label: 'Pendapatan profesional di atas Rp 10.000.000', value: 'Rp > 10.000.000', order: 4, nextQuestionKey: null }
+        ]
+      }
+    }
+  });
+
+  console.log(`✓ FASE3_5 Penutup Berhasil Dibuat (ID: ${fase35.id})`);
+  console.log('\n🚀 SEEDING BERHASIL! Seluruh 13 simpul kuesioner StepWise sinkron dengan Frontend.');
 }
 
 main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

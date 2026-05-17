@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface NavbarProps {
   minimal?: boolean;
@@ -7,6 +8,7 @@ interface NavbarProps {
 
 const Navbar = ({ minimal = false }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuthStore();
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-[#E5E7EB] shadow-sm shrink-0">
@@ -21,10 +23,18 @@ const Navbar = ({ minimal = false }: NavbarProps) => {
               <div className="hidden md:flex items-center space-x-8">
                 <a href="#fitur" className="text-[#6B7280] hover:text-[#1E3A5F] font-medium transition-colors">Fitur</a>
                 <a href="#cara-kerja" className="text-[#6B7280] hover:text-[#1E3A5F] font-medium transition-colors">Cara Kerja</a>
-                <Link to="/login" className="text-[#1E3A5F] font-semibold hover:underline">Masuk</Link>
-                <Link to="/register" className="h-[48px] px-6 bg-[#1E3A5F] text-white rounded-[8px] flex items-center font-medium hover:bg-[#152A44] transition-all">
-                  Mulai Gratis
-                </Link>
+                {isAuthenticated ? (
+                  <Link to="/dashboard" className="h-[48px] px-6 bg-[#1E3A5F] text-white rounded-[8px] flex items-center font-medium hover:bg-[#152A44] transition-all">
+                    Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/login" className="text-[#1E3A5F] font-semibold hover:underline">Masuk</Link>
+                    <Link to="/register" className="h-[48px] px-6 bg-[#1E3A5F] text-white rounded-[8px] flex items-center font-medium hover:bg-[#152A44] transition-all">
+                      Mulai Gratis
+                    </Link>
+                  </>
+                )}
               </div>
 
               <div className="md:hidden">
@@ -42,8 +52,14 @@ const Navbar = ({ minimal = false }: NavbarProps) => {
           <a href="#fitur" onClick={() => setIsMenuOpen(false)} className="block text-[#6B7280]">Fitur</a>
           <a href="#cara-kerja" onClick={() => setIsMenuOpen(false)} className="block text-[#6B7280]">Cara Kerja</a>
           <hr />
-          <Link to="/login" className="block text-[#1E3A5F] font-semibold">Masuk</Link>
-          <Link to="/register" className="block bg-[#1E3A5F] text-white text-center py-3 rounded-[8px]">Mulai Gratis</Link>
+          {isAuthenticated ? (
+            <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block bg-[#1E3A5F] text-white text-center py-3 rounded-[8px]">Dashboard</Link>
+          ) : (
+            <>
+              <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block text-[#1E3A5F] font-semibold">Masuk</Link>
+              <Link to="/register" onClick={() => setIsMenuOpen(false)} className="block bg-[#1E3A5F] text-white text-center py-3 rounded-[8px]">Mulai Gratis</Link>
+            </>
+          )}
         </div>
       )}
     </nav>

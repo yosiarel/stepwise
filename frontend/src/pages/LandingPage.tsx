@@ -7,9 +7,11 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { useAuthStore } from '../store/useAuthStore';
 
 const LandingPage = () => {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const { isAuthenticated } = useAuthStore();
 
   const features = [
     { icon: <FileText size={32} />, title: "Smart CV Extractor", desc: "Ekstraksi data pendidikan dan keahlian dari CV menggunakan Gemini API untuk profil instan." },
@@ -49,9 +51,15 @@ const LandingPage = () => {
                   Atasi kebingungan memilih spesialisasi IT. Dapatkan rekomendasi profesi personal, roadmap belajar adaptif, dan pendampingan AI 24/7.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-4">
-                  <Link to="/register" className="h-[52px] px-8 bg-white text-[#1E3A5F] rounded-[8px] flex items-center justify-center font-bold hover:bg-[#F3F4F6] transition-all shadow-lg text-[16px]">
-                    Mulai Sekarang Gratis
-                  </Link>
+                  {isAuthenticated ? (
+                    <Link to="/dashboard" className="h-[52px] px-8 bg-white text-[#1E3A5F] rounded-[8px] flex items-center justify-center font-bold hover:bg-[#F3F4F6] transition-all shadow-lg text-[16px]">
+                      Masuk ke Dashboard
+                    </Link>
+                  ) : (
+                    <Link to="/register" className="h-[52px] px-8 bg-white text-[#1E3A5F] rounded-[8px] flex items-center justify-center font-bold hover:bg-[#F3F4F6] transition-all shadow-lg text-[16px]">
+                      Mulai Sekarang Gratis
+                    </Link>
+                  )}
                   <button onClick={() => alert("Simulasi memutar video demo interaktif platform StepWise...")} className="h-[52px] px-8 border-2 border-white text-white rounded-[8px] flex items-center justify-center font-bold hover:bg-white/10 transition-all text-[16px] cursor-pointer">
                     Lihat Demo
                   </button>
@@ -176,9 +184,15 @@ const LandingPage = () => {
               Ribuan talenta digital telah menemukan jalan mereka bersama StepWise. Jangan biarkan keraguan menghambat masa depanmu.
             </p>
             <div className="pt-4">
-              <Link to="/register" className="inline-flex h-[56px] px-10 bg-white text-[#1E3A5F] rounded-[8px] items-center justify-center font-bold text-[18px] hover:bg-[#F3F4F6] transition-all shadow-xl active:scale-95">
-                Mulai Sekarang Gratis
-              </Link>
+              {isAuthenticated ? (
+                <Link to="/dashboard" className="inline-flex h-[56px] px-10 bg-white text-[#1E3A5F] rounded-[8px] items-center justify-center font-bold text-[18px] hover:bg-[#F3F4F6] transition-all shadow-xl active:scale-95">
+                  Masuk ke Dashboard
+                </Link>
+              ) : (
+                <Link to="/register" className="inline-flex h-[56px] px-10 bg-white text-[#1E3A5F] rounded-[8px] items-center justify-center font-bold text-[18px] hover:bg-[#F3F4F6] transition-all shadow-xl active:scale-95">
+                  Mulai Sekarang Gratis
+                </Link>
+              )}
             </div>
           </div>
         </section>
