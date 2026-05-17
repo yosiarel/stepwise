@@ -10,7 +10,7 @@ import {
   Plus, 
   Check, 
   X, 
-  Loader2 
+  Loader2, 
 } from 'lucide-react';
 import DashboardLayout from '../components/DashboardLayout';
 import profileService from '../services/profileService';
@@ -324,7 +324,7 @@ const ProfilePage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[15px] w-full animate-fadeIn">
               <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><span className="text-[12px] text-[#6B7280] block uppercase">Nama Lengkap</span><span className="text-[16px] font-medium text-[#1F2937] block truncate">{dataDiri.namaLengkap}</span></div>
               <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><span className="text-[12px] text-[#6B7280] block uppercase">Email</span><span className="text-[16px] font-medium text-[#1F2937] block truncate">{dataDiri.email}</span></div>
-              <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><span className="text-[12px] text-[#6B7280] block uppercase">Tanggal Lahir (Usia Otomatis)</span><span className="text-[16px] font-medium text-[#1F2937]">{dataDiri.tanggalLahir} ({hitungUsia(dataDiri.tanggalLahir)} Tahun)</span></div>
+              <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><span className="text-[12px] text-[#6B7280] block uppercase">Tanggal Lahir (Usia otomatis)</span><span className="text-[16px] font-medium text-[#1F2937]">{dataDiri.tanggalLahir} ({hitungUsia(dataDiri.tanggalLahir)} Tahun)</span></div>
               <div className="bg-[#F3F4F6] p-4 rounded-[8px] border border-[#E5E7EB]"><span className="text-[12px] text-[#6B7280] block uppercase">Nomor Telepon</span><span className="text-[16px] font-medium text-[#1F2937]">{dataDiri.nomorTelepon || 'Belum diisi'}</span></div>
             </div>
           )}

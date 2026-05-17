@@ -15,6 +15,7 @@ export interface WorkExperienceEntry {
 }
 
 export interface CvExtractedData {
+  name?: string;
   educationHistory: EducationEntry[];
   workExperiences: WorkExperienceEntry[];
   extractedSkills: string[];
@@ -26,9 +27,23 @@ export interface ReviewCvBody {
   extractedSkills: string[];
 }
 
+export interface UploadCvResponse {
+  id: string;
+  url?: string;
+}
+
+export interface ExtractCvResponse {
+  id: string;
+  extractedData: CvExtractedData;
+}
+
+export interface ReviewCvResponse {
+  success: boolean;
+  message: string;
+}
+
 const cvService = {
-  // 1. Upload CV PDF ke Backend
-  async uploadCv(file: File): Promise<any> {
+  async uploadCv(file: File): Promise<UploadCvResponse> {
     const formData = new FormData();
     formData.append('cv', file);
 
@@ -40,14 +55,12 @@ const cvService = {
     return response.data.data;
   },
 
-  // 2. Ekstrak data teks CV menggunakan AI
-  async extractCv(cvId: string): Promise<any> {
+  async extractCv(cvId: string): Promise<ExtractCvResponse> {
     const response = await axiosInstance.post(`/cv/${cvId}/extract`);
     return response.data.data;
   },
 
-  // 3. Simpan review / revisi akhir CV ke Profile
-  async reviewCv(cvId: string, body: ReviewCvBody): Promise<any> {
+  async reviewCv(cvId: string, body: ReviewCvBody): Promise<ReviewCvResponse> {
     const response = await axiosInstance.put(`/cv/${cvId}/review`, body);
     return response.data;
   }

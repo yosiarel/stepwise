@@ -1,5 +1,5 @@
 import axiosInstance from '../api/axiosInstance';
-import type { RoadmapResponse } from '../types/roadmap';
+import type { RoadmapResponse, RoadmapMaterial } from '../types/roadmap'; //
 
 const roadmapService = {
   async getActiveRoadmap(): Promise<RoadmapResponse> {
@@ -12,7 +12,7 @@ const roadmapService = {
     return response.data.data;
   },
 
-  async completeMaterial(materialId: string): Promise<any> {
+  async completeMaterial(materialId: string): Promise<RoadmapMaterial> {
     const response = await axiosInstance.patch(`/roadmap/material/${materialId}/complete`);
     return response.data.data;
   }

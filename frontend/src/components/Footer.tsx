@@ -5,14 +5,12 @@ const Footer = () => {
     <footer className="bg-[#F3F4F6] border-t border-[#D1D5DB] py-10 shrink-0 mt-auto">
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-12 mb-10 text-center md:text-left">
-          {/* 1. StepWise */}
           <div className="space-y-4">
             <span className="text-[#1E3A5F] text-[24px] font-bold tracking-tight">StepWise</span>
             <p className="text-[#6B7280] text-[14px] leading-relaxed">
               Asisten navigasi karier cerdas untuk talenta digital masa depan. Menghubungkan potensi Anda dengan standar industri.
             </p>
           </div>
-          {/* 2. Layanan Utama */}
           <div>
             <h5 className="font-bold text-[#1F2937] text-[16px] mb-6">Layanan Utama</h5>
             <ul className="text-[#6B7280] text-[14px] space-y-3">
@@ -21,7 +19,6 @@ const Footer = () => {
               <li><Link to="/" className="hover:text-[#1E3A5F]">Roadmap Belajar</Link></li>
             </ul>
           </div>
-          {/* 3. Bantuan & Legal */}
           <div>
             <h5 className="font-bold text-[#1F2937] text-[16px] mb-6">Bantuan & Legal</h5>
             <ul className="text-[#6B7280] text-[14px] space-y-3">
@@ -30,7 +27,6 @@ const Footer = () => {
               <li><Link to="/terms" className="hover:text-[#1E3A5F]">Syarat & Ketentuan</Link></li>
             </ul>
           </div>
-          {/* 4. Sosial Media (SVG Murni - No Error!) */}
           <div>
             <h5 className="font-bold text-[#1F2937] text-[16px] mb-6">Sosial Media</h5>
             <div className="flex gap-4 justify-center md:justify-start">

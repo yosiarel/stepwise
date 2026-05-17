@@ -12,7 +12,6 @@ const Navbar = ({ minimal = false }: NavbarProps) => {
     <nav className="sticky top-0 z-50 bg-white border-b border-[#E5E7EB] shadow-sm shrink-0">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          {/* Logo Konsisten */}
           <Link to="/" className="text-[#1E3A5F] text-[24px] font-bold tracking-tight shrink-0">
             StepWise
           </Link>

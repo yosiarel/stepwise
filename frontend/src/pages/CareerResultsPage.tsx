@@ -25,6 +25,25 @@ interface ProfessionCard {
   integratedSkills: IntegratedSkill[];
 }
 
+interface BackendSkill {
+  skillName: string;
+  currentLevel: string | null;
+  targetLevel: string | null;
+}
+
+interface BackendRecommendation {
+  id: string;
+  professionTitle: string;
+  reasonSummary: string;
+  readinessPercent?: number;
+  professionOverview?: {
+    longTermProspect?: string;
+    dailyTasks?: string[];
+    companyTypes?: string[];
+  };
+  skills: BackendSkill[];
+}
+
 const mockRecommendations: ProfessionCard[] = [
   {
     id: 'frontend',
@@ -109,14 +128,11 @@ const CareerResultsPage = () => {
     const fetchRecommendations = async () => {
       try {
         setIsLoading(true);
-        console.log('Mengambil rekomendasi karier dari backend...');
         const response = await careerService.getRecommendations();
-        console.log('Rekomendasi berhasil diambil:', response);
         
         if (response && response.recommendations && response.recommendations.length > 0) {
-          const mapped: ProfessionCard[] = response.recommendations.map((rec: any) => {
-            // Pemetaan status skill
-            const mappedSkills: IntegratedSkill[] = rec.skills.map((s: any) => {
+          const mapped: ProfessionCard[] = response.recommendations.map((rec: BackendRecommendation) => {
+            const mappedSkills: IntegratedSkill[] = rec.skills.map((s: BackendSkill) => {
               let status: 'matching' | 'upgrade' | 'new' = 'new';
               if (s.currentLevel === s.targetLevel) {
                 status = 'matching';
@@ -124,10 +140,9 @@ const CareerResultsPage = () => {
                 status = 'upgrade';
               }
               
-              // Standardisasi tipe level string
-              const capitalize = (str: string | null) => {
+              const capitalize = (str: string | null): 'Beginner' | 'Intermediate' | 'Advanced' | null => {
                 if (!str) return null;
-                return (str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()) as any;
+                return (str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()) as 'Beginner' | 'Intermediate' | 'Advanced';
               };
 
               return {
@@ -167,7 +182,6 @@ const CareerResultsPage = () => {
         }
       } catch (err) {
         console.error('Gagal mengambil rekomendasi karier, menggunakan fallback mock data:', err);
-        // Tetap menggunakan mockRecommendations
         setRecommendations(mockRecommendations);
         setSelectedId(mockRecommendations[0].id);
         setModalData(mockRecommendations[0]);
@@ -207,11 +221,7 @@ const CareerResultsPage = () => {
     
     setIsSelecting(true);
     try {
-      console.log('Menyimpan target karier yang dipilih:', selectedId);
       await careerService.selectCareer(selectedId);
-      console.log('Target karier berhasil disimpan!');
-      
-      // Arahkan ke dashboard setelah berhasil disimpan
       navigate('/dashboard'); 
     } catch (error) {
       console.error('Gagal memilih target karier:', error);
@@ -240,7 +250,7 @@ const CareerResultsPage = () => {
       <Navbar minimal />
 
       <main className="flex-grow py-10 md:py-16 px-4 md:px-8 pb-32 md:pb-40">
-        <div className="max-w-[1280px] mx-auto">
+        <div className="w-full max-w-[1280px] xl:max-w-[1440px] 2xl:max-w-[1580px] mx-auto transition-all">
           
           <div className="text-center mb-14 max-w-[850px] mx-auto">
             <h1 className="text-[#1E3A5F] text-[30px] md:text-[38px] font-extrabold leading-tight tracking-tight mb-4">
@@ -336,9 +346,8 @@ const CareerResultsPage = () => {
         </div>
       </main>
 
-      {/* FLOATING ACTION SELECTION BAR */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-[0_-10px_30px_rgba(0,0,0,0.03)] px-4 py-4 z-40">
-        <div className="max-w-[1280px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="w-full max-w-[1280px] xl:max-w-[1440px] 2xl:max-w-[1580px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-center sm:text-left">
             <div className="w-10 h-10 bg-[#EFF6FF] rounded-xl flex items-center justify-center text-[#3B82F6] shrink-0 hidden sm:flex">
               <Award size={20} />
@@ -367,12 +376,10 @@ const CareerResultsPage = () => {
         </div>
       </div>
 
-      {/* MODAL COMPONENT: DETAIL PROFESI */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white w-full max-w-[1100px] rounded-[24px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh] border border-slate-100">
+          <div className="bg-white w-full max-w-[1100px] xl:max-w-[1200px] 2xl:max-w-[1280px] rounded-[24px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh] border border-slate-100 transition-all">
             
-            {/* Modal Header */}
             <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#1E3A5F] text-white rounded-xl flex items-center justify-center shadow-md shadow-[#1E3A5F]/10">
@@ -391,12 +398,9 @@ const CareerResultsPage = () => {
               </button>
             </div>
 
-            {/* Modal Body: DUAL COLUMN CONTAINER */}
             <div className="flex-grow p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-8 bg-white max-h-[calc(90vh-84px)]">
               
-              {/* KOLOM KIRI: Ringkasan Umum (Col-span 7) */}
               <div className="md:col-span-7 space-y-6">
-                
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <span className="text-[11px] font-bold text-[#3B82F6] uppercase tracking-widest block">Deskripsi</span>
@@ -464,7 +468,6 @@ const CareerResultsPage = () => {
                 </div>
               </div>
 
-              {/* KOLOM KANAN: SATU DAFTAR SKILL TERPADU (Col-span 5) */}
               <div className="md:col-span-5 flex flex-col h-full border-t md:border-t-0 md:border-l border-slate-100 pt-6 md:pt-0 md:pl-6">
                 <div className="mb-4">
                   <h4 className="text-[#1E3A5F] text-[14px] font-extrabold uppercase tracking-wider mb-1">Daftar Skill & Target Belajar</h4>
@@ -483,14 +486,13 @@ const CareerResultsPage = () => {
                     >
                       <div className="flex justify-between items-start gap-2 mb-2.5">
                         <span className="font-extrabold text-[#1E3A5F] text-[13px] tracking-tight">{skill.name}</span>
-                        
                         {skill.status === 'matching' && (
                           <span className="bg-[#D1FAE5] text-[#065F46] text-[9px] font-extrabold px-2.5 py-0.5 rounded-full border border-[#A7F3D0] uppercase tracking-wide">
                             Tercapai
                           </span>
                         )}
                         {skill.status === 'upgrade' && (
-                          <span className="bg-[#FEF3C7] text-[#92400E] text-[9px] font-extrabold px-2.5 py-0.5 rounded-full border border-[#FDE68A] uppercase tracking-wide animate-pulse">
+                          <span className="bg-[#FEF3C7] text-[#92400E] text-[9px] font-extrabold px-2.5 py-0.5 rounded-full border border-[#FDE68A] uppercase tracking-wide">
                             Tingkatkan
                           </span>
                         )}

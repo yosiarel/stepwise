@@ -28,9 +28,9 @@ export interface StartAssessmentResponse {
 export interface SubmitAnswerBody {
   sessionId:   string;
   questionKey: string;
-  answerValue: string | string[]; // string[] untuk multi_choice
+  answerValue: string | string[];
 }
 
 export interface SubmitAnswerResponse {
-  nextQuestion: AssessmentQuestion | null; // null jika sudah selesai
+  nextQuestion: AssessmentQuestion | null; 
 }

@@ -7,7 +7,7 @@ import OptionCard from '../components/assessment/OptionCard';
 import { useAssessmentStore } from '../store/useAssessmentStore';
 import assessmentService from '../services/assessmentService';
 
-const Phase3Page = () => {
+const Phase2BPage = () => {
   const navigate = useNavigate();
   const { sessionId, currentQuestion, setCurrentQuestion } = useAssessmentStore();
   
@@ -61,13 +61,12 @@ const Phase3Page = () => {
         setSelectedOptions([]);
         window.scrollTo(0, 0);
         
-        // Tetap di Phase 3 selama key masih FASE3
-        if (!response.nextQuestion.key.startsWith('FASE3')) {
-          // Jika pindah fase lain (misal ada fase 4 di masa depan)
-          navigate('/assessment/question'); 
+        if (response.nextQuestion.key.startsWith('FASE3')) {
+          navigate('/assessment/phase-3');
+        } else if (response.nextQuestion.key.startsWith('FASE2A')) {
+          navigate('/assessment/phase-2-a');
         }
       } else {
-        // Selesai semua pertanyaan
         navigate('/assessment/analysis');
       }
     } catch (error) {
@@ -78,21 +77,30 @@ const Phase3Page = () => {
     }
   };
 
+  const getPhaseLabel = () => {
+    if (currentQuestion.key.startsWith('FASE2')) return 'Fase 2: Pemetaan Kompetensi';
+    if (currentQuestion.key.startsWith('FASE3')) return 'Fase 3: Gaya & Preferensi';
+    return 'Asesmen';
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FF] font-sans flex flex-col antialiased">
       <Navbar minimal />
 
-      <main className="flex-grow py-6 md:py-8 px-4">
-        <div className="max-w-[960px] mx-auto">
+      <main className="flex-grow py-6 md:py-8 px-4 flex items-center justify-center">
+        <div className="w-full max-w-[1000px] xl:max-w-[1140px] 2xl:max-w-[1240px] mx-auto transition-all">
           
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[#6B7280] hover:text-[#1E3A5F] font-bold text-[13px] mb-4 transition-colors">
             <ChevronLeft size={18} /> Kembali
           </button>
 
-          <ProgressBar phase="Fase 3: Gaya & Preferensi" percentage={85} />
+          <ProgressBar 
+            phase={getPhaseLabel()} 
+            percentage={currentQuestion.key.startsWith('FASE3') ? 70 : 45} 
+          />
 
           <div className="text-center mb-6">
-            <h2 className="text-[#1E3A5F] text-[22px] md:text-[26px] font-bold leading-tight mb-4 max-w-[750px] mx-auto">
+            <h2 className="text-[#1E3A5F] text-[22px] md:text-[26px] font-bold leading-tight mb-4 max-w-[750px] xl:max-w-[900px] mx-auto">
               {currentQuestion.text}
             </h2>
             
@@ -103,16 +111,18 @@ const Phase3Page = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {currentQuestion.options.map((opt) => (
-              <OptionCard 
-                key={opt.id}
-                label={opt.label}
-                description={''}
-                isSelected={selectedOptions.includes(opt.value)}
-                onSelect={() => handleSelect(opt.value)}
-              />
-            ))}
+          <div className="mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-[960px] xl:max-w-none mx-auto">
+              {currentQuestion.options.map((opt) => (
+                <OptionCard 
+                  key={opt.id}
+                  label={opt.label}
+                  description={opt.value}
+                  isSelected={selectedOptions.includes(opt.value)}
+                  onSelect={() => handleSelect(opt.value)}
+                />
+              ))}
+            </div>
           </div>
 
           <div className="flex justify-center border-t border-[#D1D5DB]/50 pt-6">
@@ -131,7 +141,7 @@ const Phase3Page = () => {
                 </>
               ) : (
                 <>
-                  {currentQuestion.key === 'FASE3_5' ? 'Selesaikan Asesmen' : 'Lanjutkan'} <ArrowRight size={18} />
+                  Lanjutkan <ArrowRight size={18} />
                 </>
               )}
             </button>
@@ -142,4 +152,4 @@ const Phase3Page = () => {
   );
 };
 
-export default Phase3Page;
+export default Phase2BPage;

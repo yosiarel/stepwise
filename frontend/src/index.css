@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @theme {
-  /* Identitas Baru StepWise */
   --color-primary: #1e3a5f;
   --color-primary-hover: #152a44;
   --color-primary-pressed: #0f1e33;
