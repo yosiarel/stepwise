@@ -32,7 +32,7 @@ const advisorService = {
   },
 
   async respondToProposal(proposalId: string, decision: 'APPROVED' | 'REJECTED'): Promise<void> {
-    await axiosInstance.post(`/advisor/proposal/${proposalId}/decision`, { decision });
+    await axiosInstance.patch(`/evaluation/proposal/${proposalId}/decide`, { decision });
   }
 };
 

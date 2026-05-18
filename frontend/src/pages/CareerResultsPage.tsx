@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; 
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, Check, ArrowRight, Award, X, Briefcase, Building, TrendingUp, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import careerService from '../services/careerService';
@@ -51,7 +51,7 @@ const mockRecommendations: ProfessionCard[] = [
     description: 'Membangun dan mengoptimalkan komponen antarmuka web yang interaktif, responsif, serta memastikan kenyamanan pengalaman pengguna akhir secara visual.',
     readiness: 85,
     reason: 'Kecocokan yang sangat kuat berdasarkan pemahaman dasar HTML, CSS, dan JavaScript kamu saat ini. Fokus mendalami modern framework serta manajemen state akan mempercepat kesiapan kerjamu menuju level profesional industri.',
-    skillsHave: ['HTML/CSS', 'JavaScript', 'Git'], 
+    skillsHave: ['HTML/CSS', 'JavaScript', 'Git'],
     skillsGap: ['React/Vue', 'State Management'],
     responsibilities: [
       'Mentransformasikan mockup desain UI/UX (Figma) menjadi kode web yang bersih, modular, dan interaktif.',
@@ -64,7 +64,7 @@ const mockRecommendations: ProfessionCard[] = [
       { name: 'State Management', currentLevel: null, targetLevel: 'Intermediate', status: 'new' },
       { name: 'React/Vue', currentLevel: 'Beginner', targetLevel: 'Advanced', status: 'upgrade' },
       { name: 'HTML/CSS', currentLevel: 'Advanced', targetLevel: 'Advanced', status: 'matching' },
-      { name: 'JavaScript', currentLevel: 'Intermediate', targetLevel: 'Intermediate', status: 'matching' }, 
+      { name: 'JavaScript', currentLevel: 'Intermediate', targetLevel: 'Intermediate', status: 'matching' },
       { name: 'Git', currentLevel: 'Beginner', targetLevel: 'Beginner', status: 'matching' }
     ]
   },
@@ -116,7 +116,8 @@ const mockRecommendations: ProfessionCard[] = [
 ];
 
 const CareerResultsPage = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const hasFetched = useRef(false);
   const [recommendations, setRecommendations] = useState<ProfessionCard[]>(mockRecommendations);
   const [selectedId, setSelectedId] = useState<string>('frontend');
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -125,11 +126,14 @@ const CareerResultsPage = () => {
   const [isSelecting, setIsSelecting] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchRecommendations = async () => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    const fetchRecommendations = async (retryCount = 0) => {
       try {
         setIsLoading(true);
         const response = await careerService.getRecommendations();
-        
+
         if (response && response.recommendations && response.recommendations.length > 0) {
           const mapped: ProfessionCard[] = response.recommendations.map((rec: BackendRecommendation) => {
             const mappedSkills: IntegratedSkill[] = rec.skills.map((s: BackendSkill) => {
@@ -139,7 +143,7 @@ const CareerResultsPage = () => {
               } else if (s.currentLevel !== null) {
                 status = 'upgrade';
               }
-              
+
               const capitalize = (str: string | null): 'Beginner' | 'Intermediate' | 'Advanced' | null => {
                 if (!str) return null;
                 return (str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()) as 'Beginner' | 'Intermediate' | 'Advanced';
@@ -156,7 +160,7 @@ const CareerResultsPage = () => {
             const skillsHave = mappedSkills
               .filter(s => s.status === 'matching' || s.status === 'upgrade')
               .map(s => s.name);
-            
+
             const skillsGap = mappedSkills
               .filter(s => s.status === 'new')
               .map(s => s.name);
@@ -180,11 +184,14 @@ const CareerResultsPage = () => {
           setSelectedId(mapped[0].id);
           setModalData(mapped[0]);
         }
-      } catch (err) {
-        console.error('Gagal mengambil rekomendasi karier, menggunakan fallback mock data:', err);
-        setRecommendations(mockRecommendations);
-        setSelectedId(mockRecommendations[0].id);
-        setModalData(mockRecommendations[0]);
+      } catch (err: any) {
+        if (err.response?.status === 429) {
+          const delay = 5000;
+          console.log(`Server sedang sibuk (rate limit). Mencoba lagi dalam ${delay / 1000} detik...`);
+
+          setTimeout(() => fetchRecommendations(retryCount + 1), delay);
+          return;
+        }
       } finally {
         setIsLoading(false);
       }
@@ -218,11 +225,11 @@ const CareerResultsPage = () => {
 
   const handleSelectProfession = async () => {
     if (!selectedId) return;
-    
+
     setIsSelecting(true);
     try {
       await careerService.selectCareer(selectedId);
-      navigate('/dashboard'); 
+      navigate('/dashboard');
     } catch (error) {
       console.error('Gagal memilih target karier:', error);
       alert('Gagal menyimpan target karier. Mengarahkan langsung ke dashboard.');
@@ -240,6 +247,7 @@ const CareerResultsPage = () => {
           <Loader2 className="animate-spin text-[#1E3A5F] mb-4" size={48} />
           <h3 className="text-[#1E3A5F] text-[18px] font-bold">Meracik Rekomendasi Karier Terbaik Anda...</h3>
           <p className="text-[#6B7280] text-[14px] mt-2">AI kami sedang menganalisis profil dan minat belajar Anda.</p>
+          <p className="text-[#6B7280] text-[12px] mt-4 italic">Server sedang sibuk, sistem akan terus mencoba. Harap tidak me-refresh halaman.</p>
         </main>
       </div>
     );
@@ -251,7 +259,7 @@ const CareerResultsPage = () => {
 
       <main className="flex-grow py-10 md:py-16 px-4 md:px-8 pb-32 md:pb-40">
         <div className="w-full max-w-[1280px] xl:max-w-[1440px] 2xl:max-w-[1580px] mx-auto transition-all">
-          
+
           <div className="text-center mb-14 max-w-[850px] mx-auto">
             <h1 className="text-[#1E3A5F] text-[30px] md:text-[38px] font-extrabold leading-tight tracking-tight mb-4">
               Rekomendasi Karier Kamu
@@ -271,11 +279,10 @@ const CareerResultsPage = () => {
                 <div
                   key={prof.id}
                   onClick={() => setSelectedId(prof.id)}
-                  className={`relative bg-white rounded-[20px] p-6 md:p-8 border-2 transition-all duration-300 cursor-pointer flex flex-col justify-between h-full group ${
-                    isSelected 
-                      ? 'border-[#1E3A5F] shadow-xl shadow-[#1E3A5F]/5 scale-[1.01]' 
-                      : 'border-slate-200/60 shadow-sm hover:border-[#3B82F6] hover:shadow-md'
-                  }`}
+                  className={`relative bg-white rounded-[20px] p-6 md:p-8 border-2 transition-all duration-300 cursor-pointer flex flex-col justify-between h-full group ${isSelected
+                    ? 'border-[#1E3A5F] shadow-xl shadow-[#1E3A5F]/5 scale-[1.01]'
+                    : 'border-slate-200/60 shadow-sm hover:border-[#3B82F6] hover:shadow-md'
+                    }`}
                 >
                   {isSelected && (
                     <div className="absolute -top-3.5 right-6 bg-[#1E3A5F] text-white text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
@@ -294,7 +301,7 @@ const CareerResultsPage = () => {
                         <span className="text-[#10B981] text-[14px] font-extrabold">{prof.readiness}%</span>
                       </div>
                       <div className="w-full bg-slate-200 h-[7px] rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className="bg-[#10B981] h-full rounded-full transition-all duration-500"
                           style={{ width: `${prof.readiness}%` }}
                         ></div>
@@ -330,7 +337,7 @@ const CareerResultsPage = () => {
                     </div>
                   </div>
 
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleOpenModal(prof);
@@ -379,7 +386,7 @@ const CareerResultsPage = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div className="bg-white w-full max-w-[1100px] xl:max-w-[1200px] 2xl:max-w-[1280px] rounded-[24px] shadow-2xl flex flex-col overflow-hidden max-h-[90vh] border border-slate-100 transition-all">
-            
+
             <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#1E3A5F] text-white rounded-xl flex items-center justify-center shadow-md shadow-[#1E3A5F]/10">
@@ -390,7 +397,7 @@ const CareerResultsPage = () => {
                   <p className="text-[#6B7280] text-[12px] font-medium">Detail Ringkasan Kompetensi dan Prospek Industri</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="w-9 h-9 rounded-full bg-white text-slate-400 hover:text-slate-600 border border-slate-200/60 flex items-center justify-center transition-colors shadow-sm"
               >
@@ -399,7 +406,7 @@ const CareerResultsPage = () => {
             </div>
 
             <div className="flex-grow p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-8 bg-white max-h-[calc(90vh-84px)]">
-              
+
               <div className="md:col-span-7 space-y-6">
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -408,7 +415,7 @@ const CareerResultsPage = () => {
                       {modalData.description}
                     </p>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <span className="text-[11px] font-bold text-[#3B82F6] uppercase tracking-widest block">Alasan Rekomendasi AI</span>
                     <p className="text-slate-700 text-[14px] leading-relaxed font-semibold pl-4 border-l-4 border-[#1E3A5F]">
@@ -425,7 +432,7 @@ const CareerResultsPage = () => {
                     <span className="text-[#10B981] text-[20px] font-black">{modalData.readiness}%</span>
                   </div>
                   <div className="w-full bg-slate-200 h-[10px] rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="bg-gradient-to-r from-[#10B981] to-[#059669] h-full rounded-full transition-all duration-700"
                       style={{ width: `${modalData.readiness}%` }}
                     ></div>
@@ -434,7 +441,7 @@ const CareerResultsPage = () => {
 
                 <div className="space-y-4">
                   <h4 className="text-[#1E3A5F] text-[14px] font-extrabold uppercase tracking-wider">Gambaran Umum Profesi</h4>
-                  
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="bg-white p-4 rounded-xl border border-slate-200/70 shadow-sm space-y-2">
                       <span className="text-[12px] font-bold text-slate-700 flex items-center gap-1.5">
@@ -476,13 +483,12 @@ const CareerResultsPage = () => {
 
                 <div className="space-y-3 flex-grow overflow-y-auto max-h-[420px] pr-1.5 scrollbar-thin">
                   {modalData.integratedSkills.map((skill, index) => (
-                    <div 
+                    <div
                       key={index}
-                      className={`p-3.5 rounded-xl border transition-all ${
-                        skill.status === 'matching' ? 'bg-white border-slate-100' :
+                      className={`p-3.5 rounded-xl border transition-all ${skill.status === 'matching' ? 'bg-white border-slate-100' :
                         skill.status === 'upgrade' ? 'bg-amber-50/20 border-amber-200/60 shadow-sm' :
-                        'bg-blue-50/20 border-blue-200/60 shadow-sm'
-                      }`}
+                          'bg-blue-50/20 border-blue-200/60 shadow-sm'
+                        }`}
                     >
                       <div className="flex justify-between items-start gap-2 mb-2.5">
                         <span className="font-extrabold text-[#1E3A5F] text-[13px] tracking-tight">{skill.name}</span>

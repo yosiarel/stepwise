@@ -10,7 +10,7 @@ import assessmentService from '../services/assessmentService';
 const Phase2BPage = () => {
   const navigate = useNavigate();
   const { sessionId, currentQuestion, setCurrentQuestion } = useAssessmentStore();
-  
+
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,7 +29,7 @@ const Phase2BPage = () => {
   }
 
   const isMultiChoice = currentQuestion.inputType === 'multi_choice';
-  
+
   const parsedMax = currentQuestion.helpText ? parseInt(currentQuestion.helpText.match(/\d+/)?.[0] || '0', 10) : 0;
   const maxSelect = currentQuestion.maxSelections || (isMultiChoice ? (parsedMax > 0 ? parsedMax : currentQuestion.options.length) : 1);
 
@@ -51,12 +51,6 @@ const Phase2BPage = () => {
     setIsLoading(true);
     try {
       const answerValue = isMultiChoice ? selectedOptions : selectedOptions[0];
-      
-      if (currentQuestion.key === 'FASE3_5') {
-          console.warn("Mengakali error backend: Langsung menuju analisis!");
-          navigate('/assessment/analysis');
-          return;
-      }
 
       const response = await assessmentService.submitAnswer({
         sessionId,
@@ -65,12 +59,6 @@ const Phase2BPage = () => {
       });
 
       if (response.nextQuestion) {
-        if (response.nextQuestion.key === 'FASE3_5') {
-            console.warn("Bypass trigger: Pertanyaan selanjutnya FASE3_5, mengalihkan ke analisis...");
-            navigate('/assessment/analysis');
-            return;
-        }
-
         setCurrentQuestion(response.nextQuestion);
         setSelectedOptions([]);
         window.scrollTo(0, 0);
@@ -97,21 +85,21 @@ const Phase2BPage = () => {
 
       <main className="flex-grow py-6 md:py-8 px-4 flex items-center justify-center">
         <div className="w-full max-w-[1000px] xl:max-w-[1140px] 2xl:max-w-[1240px] mx-auto transition-all">
-          
+
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-[#6B7280] hover:text-[#1E3A5F] font-bold text-[13px] mb-4 transition-colors">
             <ChevronLeft size={18} /> Kembali
           </button>
 
-          <ProgressBar 
-            phase={getPhaseLabel()} 
-            percentage={currentQuestion.key.startsWith('FASE3') ? 70 : 45} 
+          <ProgressBar
+            phase={getPhaseLabel()}
+            percentage={currentQuestion.key.startsWith('FASE3') ? 70 : 45}
           />
 
           <div className="text-center mb-6">
             <h2 className="text-[#1E3A5F] text-[22px] md:text-[26px] font-bold leading-tight mb-4 max-w-[750px] xl:max-w-[900px] mx-auto">
               {currentQuestion.text}
             </h2>
-            
+
             <div className="flex justify-center">
               <span className="inline-flex items-center px-4 py-1.5 bg-[#EFF6FF] text-[#3B82F6] text-[11px] md:text-[12px] font-extrabold rounded-full border border-[#DBEAFE] shadow-sm tracking-widest uppercase">
                 {currentQuestion.helpText || (isMultiChoice ? `Pilih maksimal ${maxSelect}` : 'Pilih satu')}
@@ -122,7 +110,7 @@ const Phase2BPage = () => {
           <div className="mb-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-[960px] xl:max-w-none mx-auto">
               {currentQuestion.options.map((opt) => (
-                <OptionCard 
+                <OptionCard
                   key={opt.id}
                   label={opt.label}
                   description={opt.value}
@@ -137,11 +125,10 @@ const Phase2BPage = () => {
             <button
               onClick={handleNext}
               disabled={selectedOptions.length === 0 || isLoading}
-              className={`h-[52px] px-12 rounded-[8px] font-bold text-[16px] flex items-center gap-2 transition-all ${
-                selectedOptions.length > 0 && !isLoading
-                ? 'bg-[#1E3A5F] text-white hover:bg-[#152A44] shadow-lg active:scale-95' 
+              className={`h-[52px] px-12 rounded-[8px] font-bold text-[16px] flex items-center gap-2 transition-all ${selectedOptions.length > 0 && !isLoading
+                ? 'bg-[#1E3A5F] text-white hover:bg-[#152A44] shadow-lg active:scale-95'
                 : 'bg-[#D1D5DB] text-white cursor-not-allowed'
-              }`}
+                }`}
             >
               {isLoading ? (
                 <>

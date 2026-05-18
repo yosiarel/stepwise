@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  CheckSquare, 
-  MessageSquare, 
-  Flame, 
-  Clock, 
-  BookOpen, 
-  ArrowRight, 
+import {
+  CheckSquare,
+  MessageSquare,
+  Flame,
+  Clock,
+  BookOpen,
+  ArrowRight,
   Sparkles,
   AlertCircle,
   PlayCircle,
@@ -32,6 +32,7 @@ interface WeeklyTask {
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const hasFetched = useRef(false);
   const { user } = useAuthStore();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -51,7 +52,7 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      
+
       // Ambil ringkasan pelacak kemajuan
       const summary = await trackerService.getSummary();
       setTrackerSummary(summary);
@@ -63,7 +64,7 @@ const DashboardPage = () => {
         // Urutkan dan ambil materi belum selesai, lalu sisa modul
         const incomplete = roadmap.materials.filter((m: any) => !m.isCompleted);
         const completed = roadmap.materials.filter((m: any) => m.isCompleted);
-        
+
         // Ambil maksimal 4 target materi untuk minggu ini
         const listToShow = [...incomplete, ...completed].slice(0, 4);
         setTasks(listToShow as WeeklyTask[]);
@@ -84,7 +85,7 @@ const DashboardPage = () => {
         if (selectedCareer) {
           console.log('Target karir ditemukan tapi roadmap aktif belum ada. Memulai pembuatan roadmap otomatis...');
           await roadmapService.generateRoadmap();
-          
+
           // Coba fetch kembali setelah roadmap terbuat
           const summary = await trackerService.getSummary();
           setTrackerSummary(summary);
@@ -111,6 +112,8 @@ const DashboardPage = () => {
   };
 
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
     fetchDashboardData();
   }, []);
 
@@ -145,7 +148,7 @@ const DashboardPage = () => {
     return (
       <DashboardLayout>
         <div className="w-full max-w-[1000px] mx-auto font-sans text-[#1F2937] pb-12 transition-all space-y-8 animate-fadeIn">
-          
+
           <div className="bg-gradient-to-br from-[#1E3A5F] to-[#152A44] text-white rounded-[24px] p-8 xl:p-12 shadow-md relative overflow-hidden">
             <div className="absolute right-0 bottom-0 top-0 opacity-10 hidden md:block">
               <Sparkles size={300} className="text-white" />
@@ -173,7 +176,7 @@ const DashboardPage = () => {
                   Biarkan Gemini AI mengekstrak data pendidikan, keahlian teknis, dan portofolio dari resume Anda secara otomatis untuk pembuatan peta jalan belajar instan.
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => navigate('/upload-cv')}
                 className="h-[46px] w-full bg-[#1E3A5F] hover:bg-[#152A44] text-white font-bold text-[13.5px] rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
               >
@@ -193,7 +196,7 @@ const DashboardPage = () => {
                   Belum memiliki CV? Ikuti kuesioner adaptif cerdas kami untuk menggali minat, gaya belajar, kecocokan bidang kerja IT, dan komitmen waktu belajar Anda.
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => navigate('/assessment/profiling')}
                 className="h-[46px] w-full bg-[#10B981] hover:bg-[#059669] text-white font-bold text-[13.5px] rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
               >
@@ -249,7 +252,7 @@ const DashboardPage = () => {
   return (
     <DashboardLayout>
       <div className="w-full max-w-[1000px] xl:max-w-[1100px] mx-auto space-y-6 animate-fadeIn">
-        
+
         {/* ROW 1: Career Route Display */}
         <div className="bg-white border border-slate-200/60 rounded-[20px] p-6 xl:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6 transition-all">
           <div>
@@ -292,10 +295,10 @@ const DashboardPage = () => {
 
         {/* ROW 3: Split Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-8 items-start transition-all">
-          
+
           {/* Main Content Column */}
           <div className="lg:col-span-8 space-y-6">
-            
+
             {/* Status Kesiapan Kerja */}
             <div className="bg-white border border-slate-200/60 rounded-[20px] p-6 xl:p-8 shadow-sm space-y-4 xl:space-y-6 transition-all">
               <div className="flex justify-between items-end">
@@ -307,7 +310,7 @@ const DashboardPage = () => {
               </div>
 
               <div className="w-full bg-slate-100 h-8 xl:h-10 rounded-xl overflow-hidden relative border border-slate-200/30">
-                <div 
+                <div
                   className="bg-gradient-to-r from-[#10B981] to-[#059669] h-full rounded-l-xl flex items-center justify-end px-3 transition-all duration-500 shadow-inner"
                   style={{ width: `${readiness}%` }}
                 >
@@ -338,27 +341,24 @@ const DashboardPage = () => {
               <div className="space-y-2.5 xl:space-y-4">
                 {tasks.length > 0 ? (
                   tasks.map((task) => (
-                    <div 
+                    <div
                       key={task.id}
                       onClick={() => handleToggleTask(task.id, task.isCompleted)}
-                      className={`p-4 xl:p-5 rounded-xl border-2 cursor-pointer flex items-center justify-between gap-4 transition-all ${
-                        task.isCompleted 
-                          ? 'bg-slate-50/80 border-slate-200/50 opacity-70' 
-                          : 'bg-white border-slate-100 shadow-sm hover:border-[#3B82F6]/60'
-                      }`}
+                      className={`p-4 xl:p-5 rounded-xl border-2 cursor-pointer flex items-center justify-between gap-4 transition-all ${task.isCompleted
+                        ? 'bg-slate-50/80 border-slate-200/50 opacity-70'
+                        : 'bg-white border-slate-100 shadow-sm hover:border-[#3B82F6]/60'
+                        }`}
                     >
                       <div className="flex items-center gap-3.5 xl:gap-5">
-                        <div className={`w-5 h-5 xl:w-6 xl:h-6 rounded-md border flex items-center justify-center transition-all ${
-                          task.isCompleted 
-                            ? 'bg-[#10B981] border-[#10B981] text-white' 
-                            : 'border-slate-300 bg-white group-hover:border-[#3B82F6]'
-                        }`}>
+                        <div className={`w-5 h-5 xl:w-6 xl:h-6 rounded-md border flex items-center justify-center transition-all ${task.isCompleted
+                          ? 'bg-[#10B981] border-[#10B981] text-white'
+                          : 'border-slate-300 bg-white group-hover:border-[#3B82F6]'
+                          }`}>
                           {task.isCompleted && <CheckSquare size={14} className="stroke-[3] xl:w-4 xl:h-4" />}
                         </div>
                         <div>
-                          <p className={`text-[13.5px] xl:text-[15px] font-extrabold transition-all ${
-                            task.isCompleted ? 'text-slate-400 line-through' : 'text-[#1E3A5F]'
-                          }`}>
+                          <p className={`text-[13.5px] xl:text-[15px] font-extrabold transition-all ${task.isCompleted ? 'text-slate-400 line-through' : 'text-[#1E3A5F]'
+                            }`}>
                             {task.title}
                           </p>
                           <span className="text-slate-400 text-[11px] xl:text-[12px] font-bold block mt-0.5 xl:mt-1">{task.phase}</span>
@@ -377,7 +377,7 @@ const DashboardPage = () => {
 
           {/* Sidebar Column */}
           <div className="lg:col-span-4 space-y-6">
-            
+
             {/* Quick Actions */}
             <div className="space-y-3">
               <button
@@ -445,7 +445,7 @@ const DashboardPage = () => {
         {/* Toast Notification System */}
         {toastMessage && (
           <div className="fixed top-6 right-6 bg-[#1F2937] text-white px-5 py-3 rounded-xl shadow-lg font-bold text-[13.5px] animate-slideInRight z-50 flex items-center gap-2.5 border border-slate-100/10">
-            <Check size={16} strokeWidth={3} className="shrink-0 text-emerald-500" /> 
+            <Check size={16} strokeWidth={3} className="shrink-0 text-emerald-500" />
             <span className="truncate">{toastMessage}</span>
           </div>
         )}
