@@ -16,7 +16,6 @@ import {
 
 const userId = (req: Request) => req.user!.sub;
 
-// ── GET /api/profile ──────────────────────────────────────────
 export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await getProfileService(userId(req));
@@ -24,7 +23,6 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
   } catch (err) { next(err); }
 };
 
-// ── PUT /api/profile/personal ─────────────────────────────────
 export const updatePersonal = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await updatePersonalService(userId(req), req.body);
@@ -32,7 +30,6 @@ export const updatePersonal = async (req: Request, res: Response, next: NextFunc
   } catch (err) { next(err); }
 };
 
-// ── PUT /api/profile/status ───────────────────────────────────
 export const updateStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await updateStatusService(userId(req), req.body);
@@ -40,7 +37,6 @@ export const updateStatus = async (req: Request, res: Response, next: NextFuncti
   } catch (err) { next(err); }
 };
 
-// ── POST /api/profile/education ───────────────────────────────
 export const createEducation = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await createEducationService(userId(req), req.body);
@@ -48,7 +44,6 @@ export const createEducation = async (req: Request, res: Response, next: NextFun
   } catch (err) { next(err); }
 };
 
-// ── PUT /api/profile/education/:id ───────────────────────────
 export const updateEducation = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await updateEducationService(userId(req), req.params['id'] as string, req.body);
@@ -56,7 +51,6 @@ export const updateEducation = async (req: Request, res: Response, next: NextFun
   } catch (err) { next(err); }
 };
 
-// ── DELETE /api/profile/education/:id ────────────────────────
 export const deleteEducation = async (req: Request, res: Response, next: NextFunction) => {
   try {
     await deleteEducationService(userId(req), req.params['id'] as string);
@@ -64,7 +58,6 @@ export const deleteEducation = async (req: Request, res: Response, next: NextFun
   } catch (err) { next(err); }
 };
 
-// ── POST /api/profile/experience ─────────────────────────────
 export const createWorkExperience = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await createWorkExperienceService(userId(req), req.body);
@@ -72,7 +65,6 @@ export const createWorkExperience = async (req: Request, res: Response, next: Ne
   } catch (err) { next(err); }
 };
 
-// ── PUT /api/profile/experience/:id ──────────────────────────
 export const updateWorkExperience = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await updateWorkExperienceService(userId(req), req.params['id'] as string, req.body);
@@ -80,7 +72,6 @@ export const updateWorkExperience = async (req: Request, res: Response, next: Ne
   } catch (err) { next(err); }
 };
 
-// ── DELETE /api/profile/experience/:id ───────────────────────
 export const deleteWorkExperience = async (req: Request, res: Response, next: NextFunction) => {
   try {
     await deleteWorkExperienceService(userId(req), req.params['id'] as string);
@@ -88,7 +79,6 @@ export const deleteWorkExperience = async (req: Request, res: Response, next: Ne
   } catch (err) { next(err); }
 };
 
-// ── POST /api/profile/skills ──────────────────────────────────
 export const createSkill = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await createSkillService(userId(req), req.body);
@@ -96,7 +86,6 @@ export const createSkill = async (req: Request, res: Response, next: NextFunctio
   } catch (err) { next(err); }
 };
 
-// ── DELETE /api/profile/skills/:id ───────────────────────────
 export const deleteSkill = async (req: Request, res: Response, next: NextFunction) => {
   try {
     await deleteSkillService(userId(req), req.params['id'] as string);
@@ -104,7 +93,6 @@ export const deleteSkill = async (req: Request, res: Response, next: NextFunctio
   } catch (err) { next(err); }
 };
 
-// ── PUT /api/profile/preferences ─────────────────────────────
 export const updatePreferences = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = await updatePreferencesService(userId(req), req.body);

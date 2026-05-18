@@ -46,15 +46,11 @@ const UploadCVPage = () => {
     setUploadStatus('uploading');
 
     try {
-      console.log('Mengunggah CV ke Cloudinary via Backend...');
       const uploadRes = await cvService.uploadCv(selectedFile);
       const cvId = uploadRes.id;
-      console.log('CV berhasil diunggah dengan ID:', cvId);
 
       setUploadStatus('extracting');
-      console.log('Memulai ekstraksi AI Nvidia...');
       const extractRes = await cvService.extractCv(cvId);
-      console.log('Ekstraksi berhasil! Data:', extractRes);
 
       navigate('/verify-data', { 
         state: { 
@@ -64,7 +60,6 @@ const UploadCVPage = () => {
       });
 
     } catch (err) {
-      console.error('Gagal memproses CV:', err);
       setUploadStatus('error');
       const axiosError = err as { response?: { data?: { message?: string } } };
       setErrorMsg(axiosError.response?.data?.message || 'Gagal memproses CV Anda. Pastikan CV merupakan file PDF berbasis teks (bukan hasil scan/gambar) dan coba lagi.');
@@ -80,11 +75,8 @@ const UploadCVPage = () => {
       const dummyBlob = new Blob(["StepWise Manual User Profile Entry"], { type: "application/pdf" });
       const dummyFile = new File([dummyBlob], "profil_manual.pdf", { type: "application/pdf" });
 
-      console.log('Menyiapkan lembar profil baru...');
       const uploadRes = await cvService.uploadCv(dummyFile);
       const cvId = uploadRes.id;
-      
-      console.log('Lembar profil berhasil disiapkan dengan ID:', cvId);
       
       navigate('/verify-data', { 
         state: { 
@@ -93,7 +85,6 @@ const UploadCVPage = () => {
         } 
       });
     } catch (err) {
-      console.error('Gagal menyiapkan lembar profil manual:', err);
       navigate('/verify-data');
     } finally {
       setIsUploading(false);

@@ -111,7 +111,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               await logout();
               navigate('/login');
             } catch (err) {
-              console.error('Logout failed, forcing client logout:', err);
               navigate('/login');
             }
           }}

@@ -128,7 +128,6 @@ export const triggerEvaluationService = async (userId: string) => {
       }),
     });
   } catch (emailErr) {
-    console.error('Failed to send trigger email:', emailErr);
   }
 
   return {

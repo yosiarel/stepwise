@@ -21,15 +21,12 @@ const LoginPage = () => {
     setError('');
 
     try {
-      console.log('Memulai proses login untuk:', email);
       const response = await authService.login({
         email,
         password,
       });
-      console.log('Login berhasil, respons:', response);
       
       setAuth(response.data);
-      console.log('Auth state diupdate, memeriksa status profil...');
 
       try {
          const userProfile = await profileService.getProfile();
@@ -40,12 +37,10 @@ const LoginPage = () => {
            navigate('/upload-cv'); 
          }
       } catch (profileErr) {
-         console.warn("Gagal mengambil profil (mungkin belum dibuat):", profileErr);
          navigate('/upload-cv');
       }
 
     } catch (err) {
-      console.error('Login error detail:', err);
       const axiosError = err as { response?: { data?: { message?: string } } };
       setError(axiosError.response?.data?.message || 'Email atau Kata Sandi salah.');
     } finally {

@@ -26,7 +26,6 @@ const DashboardCareerPage = () => {
           setSelectedId(activeCareer.id);
         }
       } catch (error) {
-        console.error('Gagal mengambil data rekomendasi karier:', error);
       } finally {
         setIsLoading(false);
       }
@@ -58,7 +57,6 @@ const DashboardCareerPage = () => {
       alert(`Sukses! Target karier Anda berhasil diperbarui ke: ${currentSelectedProfession?.professionTitle}`);
       navigate('/dashboard/roadmap'); 
     } catch (error) {
-      console.error('Gagal memperbarui target karier:', error);
       alert('Terjadi kesalahan saat memperbarui target karier. Silakan coba lagi.');
     } finally {
       setIsUpdating(false);

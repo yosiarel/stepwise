@@ -1,7 +1,6 @@
 import { prisma } from '../src/lib/prisma.js';
 
 async function main() {
-  console.log('⚡ Menjalankan Seeder Pertanyaan Asesmen StepWise...');
 
   // Bersihkan data lama untuk menghindari duplikasi / constraint error
   await prisma.assessmentAnswer.deleteMany();
@@ -49,7 +48,6 @@ async function main() {
       }
     }
   });
-  console.log(`✓ FASE1 Berhasil Dibuat (ID: ${fase1.id})`);
 
   // ===============================================================
   // FASE 2A — Eksplorasi Potensi (Jalur Non-Teknis)
@@ -132,7 +130,6 @@ async function main() {
       }
     }
   });
-  console.log('✓ Jalur Kamar FASE 2A Berhasil Disuntikkan.');
 
   // ===============================================================
   // FASE 2B — Pemetaan Kompetensi (Jalur Teknis)
@@ -194,7 +191,6 @@ async function main() {
       }
     }
   });
-  console.log(`✓ Jalur Kamar FASE 2B Berhasil Disuntikkan (ID Awal: ${fase2b1.id})`);
 
   // ===============================================================
   // FASE 3 — Gaya & Preferensi (Wajib, Semua Pengguna)
@@ -290,8 +286,6 @@ async function main() {
     }
   });
 
-  console.log(`✓ FASE3_5 Penutup Berhasil Dibuat (ID: ${fase35.id})`);
-  console.log('\n🚀 SEEDING BERHASIL! Seluruh 13 simpul kuesioner StepWise sinkron dengan Frontend.');
 }
 
 main()

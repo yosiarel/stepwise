@@ -38,8 +38,6 @@ const DashboardPage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasRoadmap, setHasRoadmap] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Data Terintegrasi
   const [trackerSummary, setTrackerSummary] = useState<any>(null);
   const [tasks, setTasks] = useState<WeeklyTask[]>([]);
   const [showEvalBanner, setShowEvalBanner] = useState<boolean>(false);
@@ -53,40 +51,29 @@ const DashboardPage = () => {
     try {
       setIsLoading(true);
 
-      // Ambil ringkasan pelacak kemajuan
       const summary = await trackerService.getSummary();
       setTrackerSummary(summary);
       setHasRoadmap(true);
-
-      // Ambil data detail modul dari active roadmap
       const roadmap = await roadmapService.getActiveRoadmap();
       if (roadmap && roadmap.materials) {
-        // Urutkan dan ambil materi belum selesai, lalu sisa modul
         const incomplete = roadmap.materials.filter((m: any) => !m.isCompleted);
         const completed = roadmap.materials.filter((m: any) => m.isCompleted);
 
-        // Ambil maksimal 4 target materi untuk minggu ini
         const listToShow = [...incomplete, ...completed].slice(0, 4);
         setTasks(listToShow as WeeklyTask[]);
       }
 
-      // Ambil data evaluasi tertunda dari backend
       try {
         const pendingEval = await evaluationService.getPending();
         setShowEvalBanner(!!pendingEval);
       } catch (evalErr) {
-        console.warn('Gagal memuat status evaluasi tertunda:', evalErr);
         setShowEvalBanner(false);
       }
     } catch (err: any) {
-      // Jika 404 (belum ada roadmap aktif), cek apakah pengguna sudah memilih karir target
       try {
         const selectedCareer = await careerService.getSelectedCareer();
         if (selectedCareer) {
-          console.log('Target karir ditemukan tapi roadmap aktif belum ada. Memulai pembuatan roadmap otomatis...');
           await roadmapService.generateRoadmap();
-
-          // Coba fetch kembali setelah roadmap terbuat
           const summary = await trackerService.getSummary();
           setTrackerSummary(summary);
           setHasRoadmap(true);
@@ -101,10 +88,8 @@ const DashboardPage = () => {
           return;
         }
       } catch (innerErr) {
-        console.log('Pengguna belum memilih target karir.');
       }
 
-      console.warn('Pengguna belum memiliki peta jalan aktif (404/belum asesmen).');
       setHasRoadmap(false);
     } finally {
       setIsLoading(false);
@@ -143,7 +128,6 @@ const DashboardPage = () => {
     );
   }
 
-  // WIZARD INITIAL JIKA BELUM ADA ROADMAP
   if (!hasRoadmap) {
     return (
       <DashboardLayout>
@@ -211,7 +195,6 @@ const DashboardPage = () => {
     );
   }
 
-  // TAMPILAN DASHBOARD UTAMA TERINTEGRASI
   const readiness = trackerSummary?.overallProgress?.percent || 0;
   const materiSelesai = trackerSummary?.overallProgress?.completed || 0;
   const totalMateri = trackerSummary?.overallProgress?.total || 0;

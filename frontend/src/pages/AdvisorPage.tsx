@@ -84,7 +84,6 @@ const AdvisorPage = () => {
           ]);
         }
       } catch (error) {
-        console.error('Gagal mengambil histori chat:', error);
         setMessages([
           {
             id: 'init-msg',
@@ -153,7 +152,6 @@ const AdvisorPage = () => {
             if (latestAdvisorProposal) proposalId = latestAdvisorProposal.id;
           }
         } catch (err) {
-          console.error('Failed to fetch pending proposal ID:', err);
         }
       }
       
@@ -172,8 +170,7 @@ const AdvisorPage = () => {
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error('Gagal mengirim pesan ke AI Advisor:', error);
-      setMessages(prev => [
+        setMessages(prev => [
         ...prev,
         {
           id: `err-${Date.now()}`,
@@ -217,7 +214,6 @@ const AdvisorPage = () => {
         setIsHistoryExpanded(false); 
       }
     } catch (error) {
-      console.error('Gagal mereset sesi chat:', error);
       alert('Gagal memulai sesi baru. Pastikan koneksi server backend berjalan normal.');
     } finally {
       setIsSending(false);
@@ -250,7 +246,6 @@ const AdvisorPage = () => {
         setTimeout(() => setToastMessage(null), 3000);
       }
     } catch (error) {
-      console.error('Gagal memproses keputusan proposal:', error);
       const axiosError = error as { response?: { data?: { message?: string } } };
       alert(axiosError.response?.data?.message || 'Gagal mengirimkan keputusan ke server. Silakan coba kembali.');
     }

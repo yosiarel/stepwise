@@ -32,7 +32,6 @@ const extractTextFromPdf = async (buffer: Buffer): Promise<string> => {
     const result = await parser.getText();
     return result.text;
   } catch (err: any) {
-    console.error('PDF Parse Error:', err.message);
     throw err;
   } finally {
     await parser.destroy();
@@ -142,7 +141,6 @@ export const extractCvService = async (userId: string, cvId: string) => {
       import('https').then((https) => {
         https.get(url, (res) => {
           if (res.statusCode !== 200) {
-            console.error(`Download failed. Status: ${res.statusCode}, URL: ${url}`);
             return reject(new Error(`Failed to download file: ${res.statusCode}`));
           }
           const chunks: any[] = [];

@@ -139,11 +139,8 @@ const VerifyDataPage = () => {
       };
 
       if (cvId) {
-        console.log(`Menyimpan review data CV dengan ID: ${cvId}...`);
         await cvService.reviewCv(cvId, reviewBody);
-        console.log('Profil berhasil disimpan di backend!');
       } else {
-        console.warn('Simpan profil manual tanpa cvId, mengabaikan hit review.');
       }
 
       setSaveStatus('success');
@@ -154,7 +151,6 @@ const VerifyDataPage = () => {
       }, 1500);
 
     } catch (err) {
-      console.error('Gagal menyimpan tinjauan profil:', err);
       setSaveStatus('error');
       const axiosError = err as { response?: { data?: { message?: string } } };
       setErrorMsg(axiosError.response?.data?.message || 'Gagal menyimpan profil belajar Anda. Silakan periksa koneksi Anda dan coba lagi.');

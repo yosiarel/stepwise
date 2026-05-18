@@ -187,7 +187,6 @@ const CareerResultsPage = () => {
       } catch (err: any) {
         if (err.response?.status === 429) {
           const delay = 5000;
-          console.log(`Server sedang sibuk (rate limit). Mencoba lagi dalam ${delay / 1000} detik...`);
 
           setTimeout(() => fetchRecommendations(retryCount + 1), delay);
           return;
@@ -231,7 +230,6 @@ const CareerResultsPage = () => {
       await careerService.selectCareer(selectedId);
       navigate('/dashboard');
     } catch (error) {
-      console.error('Gagal memilih target karier:', error);
       alert('Gagal menyimpan target karier. Mengarahkan langsung ke dashboard.');
       navigate('/dashboard');
     } finally {

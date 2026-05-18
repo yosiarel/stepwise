@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import assessmentService from '../services/assessmentService';
 import { useAssessmentStore } from '../store/useAssessmentStore';
 
 const AnalysisLoadingPage = () => {
@@ -14,14 +13,11 @@ const AnalysisLoadingPage = () => {
       hasCompleted.current = true;
 
       try {
-        console.log('Menyelesaikan asesmen dan memulai analisis AI...');
-
         setTimeout(() => {
           resetAssessment();
           navigate('/assessment/results');
         }, 2000);
       } catch (error) {
-        console.error('Gagal menyelesaikan asesmen:', error);
         alert('Terjadi kesalahan saat menganalisis profil Anda. Silakan coba lagi dari Dashboard.');
         navigate('/dashboard');
       }

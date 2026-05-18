@@ -66,7 +66,6 @@ const Phase2BPage = () => {
         navigate('/assessment/analysis');
       }
     } catch (error) {
-      console.error('Gagal mengirim jawaban:', error);
       alert('Terjadi kesalahan. Silakan coba lagi.');
     } finally {
       setIsLoading(false);

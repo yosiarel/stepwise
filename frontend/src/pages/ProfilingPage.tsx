@@ -16,20 +16,16 @@ const ProfilingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Pemicu otomatis saat halaman dibuka: Mengambil sesi dan soal FASE 1 dari backend
   useEffect(() => {
     const initializeProfiling = async () => {
       setIsInitLoading(true);
       setErrorMsg('');
-      try {
-        console.log('Mengambil data kuesioner FASE 1...');
+      try {;
         const response = await assessmentService.startAssessment();
-        console.log('Sesi Berhasil Diambil:', response);
         
         setSessionId(response.sessionId);
         setCurrentQuestion(response.question);
       } catch (err) {
-        console.error('Gagal memuat pertanyaan profiling:', err);
         setErrorMsg('Gagal memuat data asesmen. Silakan segarkan halaman atau periksa jaringan Anda.');
       } finally {
         setIsInitLoading(false);
@@ -40,7 +36,6 @@ const ProfilingPage = () => {
   }, [setSessionId, setCurrentQuestion]);
 
   const handleSelect = (value: string) => {
-    // Karena FASE 1 bersifat single_choice, kita timpa array dengan opsi tunggal
     setSelectedOption([value]);
   };
 
@@ -51,7 +46,6 @@ const ProfilingPage = () => {
     setErrorMsg('');
     try {
       const answerValue = selectedOption[0];
-      console.log(`Mengirim jawaban FASE 1: ${answerValue}`);
 
       const response = await assessmentService.submitAnswer({
         sessionId,
@@ -60,15 +54,11 @@ const ProfilingPage = () => {
       });
 
       if (response.nextQuestion) {
-        // Simpan pertanyaan berikutnya ke dalam global state
         setCurrentQuestion(response.nextQuestion);
         
-        // LOGIKA PERCABANGAN BERDASARKAN SEEDER BACKEND
         if (response.nextQuestion.key.startsWith('FASE2B')) {
-          console.log('Mengarahkan ke Jalur Teknis (Phase 2B)');
           navigate('/assessment/phase-2-b');
         } else if (response.nextQuestion.key.startsWith('FASE2A')) {
-          console.log('Mengarahkan ke Jalur Non-Teknis (Phase 2A)');
           navigate('/assessment/phase-2-a');
         } else if (response.nextQuestion.key.startsWith('FASE3')) {
           navigate('/assessment/phase-3');
@@ -79,14 +69,12 @@ const ProfilingPage = () => {
         navigate('/assessment/analysis');
       }
     } catch (err) {
-      console.error('Gagal mengirim jawaban profiling:', err);
       setErrorMsg('Gagal menyimpan jawaban Anda. Silakan coba lagi.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Tampilan Menunggu Loading Awal Saat Ambil Data dari Backend Railway
   if (isInitLoading) {
     return (
       <div className="min-h-screen bg-[#F8F9FF] flex flex-col antialiased">
@@ -106,7 +94,6 @@ const ProfilingPage = () => {
       <main className="flex-grow py-8 px-4 flex items-center justify-center">
         <div className="w-full max-w-[960px] xl:max-w-[1140px] mx-auto transition-all">
           
-          {/* Progress Bar Indikator Status Tahap Asesmen */}
           <ProgressBar 
             phase="Fase 1: Profiling & Familiaritas" 
             percentage={15} 
